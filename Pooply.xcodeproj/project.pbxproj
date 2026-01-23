@@ -7,18 +7,58 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		44704F552E7E0ABA0058A421 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 44704F542E7E0ABA0058A421 /* Alamofire */; };
+		44704F592E7E0AC70058A421 /* APIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F582E7E0AC70058A421 /* APIService.swift */; };
+		44704F5D2E7E0B8C0058A421 /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F5C2E7E0B8C0058A421 /* CalendarView.swift */; };
+		44704F5F2E7E0C390058A421 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F5E2E7E0C390058A421 /* ContentView.swift */; };
+		44704F642E7E14F00058A421 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F632E7E14F00058A421 /* User.swift */; };
+		44704F672E7E15860058A421 /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F662E7E15860058A421 /* UserViewModel.swift */; };
+		44704F692E7E15ED0058A421 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F682E7E15ED0058A421 /* Extensions.swift */; };
+		44704F6B2E7E1AC40058A421 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F6A2E7E1AC40058A421 /* InsightsView.swift */; };
+		44704F6E2E7E215F0058A421 /* LogCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F6D2E7E215F0058A421 /* LogCard.swift */; };
+		44704F702E7E27990058A421 /* Test.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F6F2E7E27990058A421 /* Test.swift */; };
+		44758F132E70BE560055D972 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44758F122E70BE560055D972 /* HomeView.swift */; };
+		4479A1742EB20CC300DA02E1 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4479A1732EB20CC300DA02E1 /* WelcomeView.swift */; };
+		44A682452EAB0CD200B28781 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A682442EAB0CD200B28781 /* CameraView.swift */; };
+		44A682472EAB8C8200B28781 /* ManualEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A682462EAB8C8200B28781 /* ManualEntryView.swift */; };
+		44A682492EABFFFF00B28781 /* ProfileModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A682482EABFFFF00B28781 /* ProfileModal.swift */; };
 		44D123592DA07D6E00BFC590 /* PooplyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D123582DA07D6E00BFC590 /* PooplyApp.swift */; };
-		44D1235B2DA07D6E00BFC590 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D1235A2DA07D6E00BFC590 /* ContentView.swift */; };
 		44D1235D2DA07D7200BFC590 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44D1235C2DA07D7200BFC590 /* Assets.xcassets */; };
 		44D123602DA07D7200BFC590 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44D1235F2DA07D7200BFC590 /* Preview Assets.xcassets */; };
+		44D123672DA07DA100BFC590 /* TabBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D123662DA07DA000BFC590 /* TabBarView.swift */; };
+		44D1236D2DA07FAA00BFC590 /* Log.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D1236C2DA07FAA00BFC590 /* Log.swift */; };
+		44D1236F2DA08A9B00BFC590 /* PoopAnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D1236E2DA08A9B00BFC590 /* PoopAnalysisView.swift */; };
+		44D123712DA1C1AB00BFC590 /* Nunito-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44D123702DA1C1AB00BFC590 /* Nunito-Black.ttf */; };
+		44D123732DA1C1BA00BFC590 /* Nunito-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44D123722DA1C1BA00BFC590 /* Nunito-Bold.ttf */; };
+		44D123752DA1C1D600BFC590 /* Nunito-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44D123742DA1C1D600BFC590 /* Nunito-Regular.ttf */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		44704F582E7E0AC70058A421 /* APIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIService.swift; sourceTree = "<group>"; };
+		44704F5C2E7E0B8C0058A421 /* CalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalendarView.swift; sourceTree = "<group>"; };
+		44704F5E2E7E0C390058A421 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		44704F632E7E14F00058A421 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		44704F662E7E15860058A421 /* UserViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserViewModel.swift; sourceTree = "<group>"; };
+		44704F682E7E15ED0058A421 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		44704F6A2E7E1AC40058A421 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
+		44704F6D2E7E215F0058A421 /* LogCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogCard.swift; sourceTree = "<group>"; };
+		44704F6F2E7E27990058A421 /* Test.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Test.swift; sourceTree = "<group>"; };
+		44758F122E70BE560055D972 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		4479A1732EB20CC300DA02E1 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		44A682442EAB0CD200B28781 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
+		44A682462EAB8C8200B28781 /* ManualEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualEntryView.swift; sourceTree = "<group>"; };
+		44A682482EABFFFF00B28781 /* ProfileModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModal.swift; sourceTree = "<group>"; };
 		44D123552DA07D6E00BFC590 /* Pooply.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pooply.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		44D123582DA07D6E00BFC590 /* PooplyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooplyApp.swift; sourceTree = "<group>"; };
-		44D1235A2DA07D6E00BFC590 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		44D1235C2DA07D7200BFC590 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		44D1235F2DA07D7200BFC590 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		44D123662DA07DA000BFC590 /* TabBarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabBarView.swift; sourceTree = "<group>"; };
+		44D1236C2DA07FAA00BFC590 /* Log.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Log.swift; sourceTree = "<group>"; };
+		44D1236E2DA08A9B00BFC590 /* PoopAnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PoopAnalysisView.swift; sourceTree = "<group>"; };
+		44D123702DA1C1AB00BFC590 /* Nunito-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Black.ttf"; sourceTree = "<group>"; };
+		44D123722DA1C1BA00BFC590 /* Nunito-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Bold.ttf"; sourceTree = "<group>"; };
+		44D123742DA1C1D600BFC590 /* Nunito-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Regular.ttf"; sourceTree = "<group>"; };
+		44D123762DA1C1FE00BFC590 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -26,12 +66,38 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44704F552E7E0ABA0058A421 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		44704F622E7E14DB0058A421 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				44D1236C2DA07FAA00BFC590 /* Log.swift */,
+				44704F632E7E14F00058A421 /* User.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		44704F652E7E154D0058A421 /* ViewModels */ = {
+			isa = PBXGroup;
+			children = (
+				44704F662E7E15860058A421 /* UserViewModel.swift */,
+			);
+			path = ViewModels;
+			sourceTree = "<group>";
+		};
+		44704F6C2E7E21500058A421 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				44704F6D2E7E215F0058A421 /* LogCard.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
 		44D1234C2DA07D6E00BFC590 = {
 			isa = PBXGroup;
 			children = (
@@ -51,10 +117,18 @@
 		44D123572DA07D6E00BFC590 /* Pooply */ = {
 			isa = PBXGroup;
 			children = (
+				44D123762DA1C1FE00BFC590 /* Info.plist */,
+				44704F582E7E0AC70058A421 /* APIService.swift */,
 				44D123582DA07D6E00BFC590 /* PooplyApp.swift */,
-				44D1235A2DA07D6E00BFC590 /* ContentView.swift */,
+				44D123702DA1C1AB00BFC590 /* Nunito-Black.ttf */,
+				44D123722DA1C1BA00BFC590 /* Nunito-Bold.ttf */,
+				44D123742DA1C1D600BFC590 /* Nunito-Regular.ttf */,
 				44D1235C2DA07D7200BFC590 /* Assets.xcassets */,
+				44704F622E7E14DB0058A421 /* Models */,
 				44D1235E2DA07D7200BFC590 /* Preview Content */,
+				44704F652E7E154D0058A421 /* ViewModels */,
+				44D1236A2DA07F8000BFC590 /* Views */,
+				44704F682E7E15ED0058A421 /* Extensions.swift */,
 			);
 			path = Pooply;
 			sourceTree = "<group>";
@@ -65,6 +139,25 @@
 				44D1235F2DA07D7200BFC590 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		44D1236A2DA07F8000BFC590 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				44704F6C2E7E21500058A421 /* Components */,
+				44758F122E70BE560055D972 /* HomeView.swift */,
+				44D123662DA07DA000BFC590 /* TabBarView.swift */,
+				44A682462EAB8C8200B28781 /* ManualEntryView.swift */,
+				44D1236E2DA08A9B00BFC590 /* PoopAnalysisView.swift */,
+				44704F5C2E7E0B8C0058A421 /* CalendarView.swift */,
+				44704F5E2E7E0C390058A421 /* ContentView.swift */,
+				44A682482EABFFFF00B28781 /* ProfileModal.swift */,
+				44704F6A2E7E1AC40058A421 /* InsightsView.swift */,
+				44704F6F2E7E27990058A421 /* Test.swift */,
+				44A682442EAB0CD200B28781 /* CameraView.swift */,
+				4479A1732EB20CC300DA02E1 /* WelcomeView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -111,6 +204,9 @@
 				Base,
 			);
 			mainGroup = 44D1234C2DA07D6E00BFC590;
+			packageReferences = (
+				44704F532E7E0ABA0058A421 /* XCRemoteSwiftPackageReference "Alamofire" */,
+			);
 			productRefGroup = 44D123562DA07D6E00BFC590 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -125,8 +221,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				44D123752DA1C1D600BFC590 /* Nunito-Regular.ttf in Resources */,
 				44D123602DA07D7200BFC590 /* Preview Assets.xcassets in Resources */,
 				44D1235D2DA07D7200BFC590 /* Assets.xcassets in Resources */,
+				44D123732DA1C1BA00BFC590 /* Nunito-Bold.ttf in Resources */,
+				44D123712DA1C1AB00BFC590 /* Nunito-Black.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -137,7 +236,23 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				44D1235B2DA07D6E00BFC590 /* ContentView.swift in Sources */,
+				44D1236D2DA07FAA00BFC590 /* Log.swift in Sources */,
+				44704F6B2E7E1AC40058A421 /* InsightsView.swift in Sources */,
+				44704F702E7E27990058A421 /* Test.swift in Sources */,
+				44A682492EABFFFF00B28781 /* ProfileModal.swift in Sources */,
+				44A682452EAB0CD200B28781 /* CameraView.swift in Sources */,
+				44704F672E7E15860058A421 /* UserViewModel.swift in Sources */,
+				44D123672DA07DA100BFC590 /* TabBarView.swift in Sources */,
+				44704F6E2E7E215F0058A421 /* LogCard.swift in Sources */,
+				44D1236F2DA08A9B00BFC590 /* PoopAnalysisView.swift in Sources */,
+				44704F5D2E7E0B8C0058A421 /* CalendarView.swift in Sources */,
+				44704F5F2E7E0C390058A421 /* ContentView.swift in Sources */,
+				44704F692E7E15ED0058A421 /* Extensions.swift in Sources */,
+				44A682472EAB8C8200B28781 /* ManualEntryView.swift in Sources */,
+				4479A1742EB20CC300DA02E1 /* WelcomeView.swift in Sources */,
+				44758F132E70BE560055D972 /* HomeView.swift in Sources */,
+				44704F592E7E0AC70058A421 /* APIService.swift in Sources */,
+				44704F642E7E14F00058A421 /* User.swift in Sources */,
 				44D123592DA07D6E00BFC590 /* PooplyApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -275,11 +390,13 @@
 				DEVELOPMENT_TEAM = KC575847UZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pooply/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -287,9 +404,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.BrandonGrossnickle.Pooply;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -304,11 +425,13 @@
 				DEVELOPMENT_TEAM = KC575847UZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Pooply/Info.plist;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -316,9 +439,13 @@
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.BrandonGrossnickle.Pooply;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -344,6 +471,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		44704F532E7E0ABA0058A421 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		44704F542E7E0ABA0058A421 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 44704F532E7E0ABA0058A421 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 44D1234D2DA07D6E00BFC590 /* Project object */;
 }

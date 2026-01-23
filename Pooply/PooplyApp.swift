@@ -7,11 +7,17 @@
 
 import SwiftUI
 
+
 @main
 struct PooplyApp: App {
+    @StateObject private var userViewModel = UserViewModel(
+        user: User(name: "Brandon", age: 27, weight: 170, sex: "male")
+    )
+    
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environmentObject(userViewModel)
         }
     }
 }
