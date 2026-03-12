@@ -12,6 +12,6 @@ struct User: Identifiable, Codable {
     var name: String
     var age: Int
     var weight: Double
-    var sex: String
+    var gender: String
 }
 

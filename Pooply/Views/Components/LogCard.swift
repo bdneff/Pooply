@@ -2,35 +2,37 @@
 //  LogCard.swift
 //  Pooply
 //
-//  Created by Brandon Grossnickle on 9/19/25.
+//  Redesigned Log Card - Phase 8
 //
 
 import SwiftUI
 
 struct LogCard: View {
     let log: Log
-    
+
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: Theme.Spacing.md) {
             // Poop type image
             Image(log.type.rawValue)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 48, height: 48)
+                .frame(width: 44, height: 44)
                 .padding(8)
-                .background(Color(hex: "#e5fff7"))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Theme.Colors.tealTint)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous))
 
             // Day + time + category
             VStack(alignment: .leading, spacing: 2) {
-                Text(log.weekday) // e.g. "Sunday"
-                    .font(Font.custom("Nunito Bold", size: 16))
-                    .foregroundStyle(Color(hex: "#1B5E20"))
-                Text(timeString(from: log.timestamp)) // e.g. "12:00 p.m."
-                    .font(Font.custom("Nunito Regular", size: 14))
-                    .foregroundStyle(Color(hex: "#2E7D32"))
+                Text(log.weekday)
+                    .font(Theme.Fonts.bodyBold())
+                    .foregroundStyle(Theme.Colors.textPrimary)
+
+                Text(timeString(from: log.timestamp))
+                    .font(Theme.Fonts.caption())
+                    .foregroundStyle(Theme.Colors.textSecondary)
+
                 Text(log.poopScore.rawValue.capitalized)
-                    .font(Font.custom("Nunito Regular", size: 12))
+                    .font(Theme.Fonts.caption())
                     .foregroundStyle(categoryColor(for: log.poopScore))
             }
 
@@ -41,30 +43,43 @@ struct LogCard: View {
                 .fill(categoryColor(for: log.poopScore))
                 .frame(width: 12, height: 12)
         }
-        .padding()
-        .background(Color(hex: "#e5fff7"))
-        .clipShape(RoundedRectangle(cornerRadius: 32, style: .continuous))
+        .padding(Theme.Spacing.md)
+        .background(Theme.Colors.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.large, style: .continuous))
+        .cardShadow()
     }
 
     // MARK: - Helpers
 
     private func categoryColor(for category: Log.PoopCategory) -> Color {
         switch category {
-        case .regular: return Color(hex: "#19b888")
-        case .loose: return Color(hex: "#008CFF")
-        case .hard: return Color(hex: "#FF7A33")
+        case .regular: return Theme.Colors.good
+        case .loose: return Theme.Colors.loose
+        case .hard: return Theme.Colors.hard
         }
     }
-    
+
     private func timeString(from date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "h:mm a" // 12:00 PM
-        return formatter.string(from: date).lowercased() // "12:00 p.m."
+        formatter.dateFormat = "h:mm a"
+        return formatter.string(from: date).lowercased()
     }
 }
 
-
-
-//#Preview {
-//    LogCard()
-//}
+#Preview {
+    LogCard(
+        log: Log(
+            poopScore: .regular,
+            type: .smoothSausage,
+            color: .mediumBrown,
+            size: .medium,
+            bloodPercentage: 0,
+            hydrationPercentage: 0.8,
+            fiberPercentage: 0.6,
+            timestamp: Date(),
+            analysis: "Sample log"
+        )
+    )
+    .padding()
+    .background(Theme.Colors.background)
+}

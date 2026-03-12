@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pooply — Privacy Policy</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, sans-serif;
+            background-color: #FFFFFF;
+            color: #1B5E20;
+            line-height: 1.7;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 48px 24px 80px;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 2px solid #E8F5F1;
+        }
+
+        .header .logo {
+            font-family: 'Nunito', sans-serif;
+            font-weight: 900;
+            font-size: 36px;
+            color: #19B888;
+            margin-bottom: 8px;
+        }
+
+        .header h1 {
+            font-weight: 700;
+            font-size: 28px;
+            color: #1B5E20;
+            margin-bottom: 12px;
+        }
+
+        .header .meta {
+            font-size: 14px;
+            color: #78909C;
+        }
+
+        .header .meta strong {
+            color: #2E7D32;
+        }
+
+        /* Sections */
+        h2 {
+            font-weight: 700;
+            font-size: 22px;
+            color: #1B5E20;
+            margin-top: 40px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #E8F5F1;
+        }
+
+        h3 {
+            font-weight: 700;
+            font-size: 17px;
+            color: #2E7D32;
+            margin-top: 24px;
+            margin-bottom: 8px;
+        }
+
+        p {
+            font-size: 16px;
+            color: #1B5E20;
+            margin-bottom: 12px;
+        }
+
+        ul {
+            margin: 8px 0 16px 0;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        ul li {
+            font-size: 15px;
+            color: #2E7D32;
+            padding: 4px 0 4px 24px;
+            position: relative;
+        }
+
+        ul li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 8px;
+            height: 8px;
+            background-color: #19B888;
+            border-radius: 50%;
+        }
+
+        strong {
+            font-weight: 700;
+            color: #1B5E20;
+        }
+
+        /* Info card */
+        .info-card {
+            background-color: #F8FAF9;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+            border-left: 4px solid #19B888;
+        }
+
+        .info-card p {
+            margin-bottom: 0;
+            font-size: 15px;
+        }
+
+        /* Alert card */
+        .alert-card {
+            background-color: #FFF3E0;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+            border-left: 4px solid #FF7A33;
+        }
+
+        .alert-card p {
+            margin-bottom: 0;
+            font-size: 15px;
+            color: #1B5E20;
+        }
+
+        /* Table */
+        .summary-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 24px 0;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        }
+
+        .summary-table th {
+            background-color: #19B888;
+            color: #FFFFFF;
+            font-weight: 700;
+            font-size: 14px;
+            padding: 14px 16px;
+            text-align: left;
+        }
+
+        .summary-table td {
+            padding: 12px 16px;
+            font-size: 14px;
+            color: #2E7D32;
+            border-bottom: 1px solid #E8F5F1;
+        }
+
+        .summary-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .summary-table tr:nth-child(even) td {
+            background-color: #F8FAF9;
+        }
+
+        /* Divider */
+        hr {
+            border: none;
+            height: 2px;
+            background-color: #E8F5F1;
+            margin: 32px 0;
+        }
+
+        /* Contact section */
+        .contact-card {
+            background-color: #E8F5F1;
+            border-radius: 20px;
+            padding: 28px;
+            margin: 32px 0;
+            text-align: center;
+        }
+
+        .contact-card h3 {
+            color: #1B5E20;
+            margin-top: 0;
+            font-size: 20px;
+        }
+
+        .contact-card a {
+            color: #19B888;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .contact-card a:hover {
+            text-decoration: underline;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 2px solid #E8F5F1;
+            font-size: 14px;
+            color: #78909C;
+        }
+
+        .footer em {
+            display: block;
+            margin-top: 8px;
+            font-style: normal;
+            color: #B0BEC5;
+        }
+
+        /* Key takeaways */
+        .takeaways {
+            background-color: #F8FAF9;
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .takeaways ul li::before {
+            background-color: #2E7D32;
+        }
+
+        /* Links */
+        a {
+            color: #19B888;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .container {
+                padding: 32px 16px 64px;
+            }
+
+            .header .logo {
+                font-size: 28px;
+            }
+
+            .header h1 {
+                font-size: 22px;
+            }
+
+            h2 {
+                font-size: 19px;
+            }
+
+            .summary-table th,
+            .summary-table td {
+                padding: 10px 12px;
+                font-size: 13px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">pooply</div>
+            <h1>Privacy Policy</h1>
+            <p class="meta"><strong>Effective Date:</strong> January 23, 2026 &nbsp;&bull;&nbsp; <strong>Last Updated:</strong> January 23, 2026</p>
+        </div>
+
+        <p>BetSlips LLC ("Company," "we," "us," or "our") operates the Pooply mobile application ("App"). This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our App.</p>
+
+        <div class="info-card">
+            <p>By using Pooply, you consent to the practices described in this policy.</p>
+        </div>
+
+        <!-- 1 -->
+        <h2>1. Information We Collect</h2>
+
+        <h3>1.1 Information You Provide</h3>
+
+        <p><strong>Account Information:</strong></p>
+        <ul>
+            <li>Name</li>
+            <li>Age</li>
+            <li>Weight</li>
+            <li>Biological sex</li>
+            <li>Email address (if provided)</li>
+        </ul>
+
+        <p><strong>Health and Wellness Data:</strong></p>
+        <ul>
+            <li>Bowel movement logs (frequency, type, characteristics)</li>
+            <li>Bristol Stool Scale classifications</li>
+            <li>Hydration levels</li>
+            <li>Fiber intake estimates</li>
+            <li>Blood presence indicators</li>
+            <li>Timestamps of entries</li>
+            <li>Notes and observations</li>
+        </ul>
+
+        <p><strong>Questionnaire Responses:</strong></p>
+        <ul>
+            <li>Digestive health history</li>
+            <li>Dietary preferences</li>
+            <li>Health goals</li>
+            <li>Bowel frequency patterns</li>
+        </ul>
+
+        <h3>1.2 Images and Photographs</h3>
+
+        <p>When you use the camera feature, we collect and store photographs you upload. <strong>These images become the property of BetSlips LLC</strong> and may be used for:</p>
+        <ul>
+            <li>AI-powered analysis and scoring</li>
+            <li>Machine learning model training and improvement</li>
+            <li>Research and development</li>
+            <li>Service enhancement</li>
+            <li>Any other lawful business purpose</li>
+        </ul>
+
+        <div class="alert-card">
+            <p><strong>Images are retained indefinitely and may be used even after your account is deleted.</strong></p>
+        </div>
+
+        <h3>1.3 Automatically Collected Information</h3>
+
+        <p><strong>Device Information:</strong></p>
+        <ul>
+            <li>Device type and model</li>
+            <li>Operating system version</li>
+            <li>Unique device identifiers</li>
+            <li>App version</li>
+        </ul>
+
+        <p><strong>Usage Data:</strong></p>
+        <ul>
+            <li>Features accessed</li>
+            <li>Time spent in App</li>
+            <li>Interaction patterns</li>
+            <li>Crash reports and diagnostics</li>
+        </ul>
+
+        <p><strong>Location Data:</strong></p>
+        <ul>
+            <li>We do not collect precise location data</li>
+            <li>General region may be inferred from device settings</li>
+        </ul>
+
+        <!-- 2 -->
+        <h2>2. How We Use Your Information</h2>
+
+        <h3>2.1 Providing Services</h3>
+        <ul>
+            <li>Calculating your personalized Gut Score</li>
+            <li>Generating health insights and patterns</li>
+            <li>Tracking streaks and progress</li>
+            <li>Delivering personalized recommendations</li>
+        </ul>
+
+        <h3>2.2 Improving Our Services</h3>
+        <ul>
+            <li>Training and improving AI/ML models</li>
+            <li>Analyzing usage patterns</li>
+            <li>Developing new features</li>
+            <li>Fixing bugs and technical issues</li>
+        </ul>
+
+        <h3>2.3 Communications</h3>
+        <ul>
+            <li>Sending push notifications (with your permission)</li>
+            <li>Responding to inquiries</li>
+            <li>Providing customer support</li>
+            <li>Sending service updates</li>
+        </ul>
+
+        <h3>2.4 Research and Development</h3>
+        <ul>
+            <li>Conducting anonymized health research</li>
+            <li>Improving digestive health understanding</li>
+            <li>Developing new wellness features</li>
+        </ul>
+
+        <h3>2.5 Legal and Safety</h3>
+        <ul>
+            <li>Complying with legal obligations</li>
+            <li>Enforcing our Terms of Service</li>
+            <li>Protecting our rights and property</li>
+            <li>Ensuring user safety</li>
+        </ul>
+
+        <!-- 3 -->
+        <h2>3. How We Share Your Information</h2>
+
+        <h3>3.1 Service Providers</h3>
+        <p>We may share information with third-party vendors who assist us in:</p>
+        <ul>
+            <li>Cloud storage and hosting</li>
+            <li>Analytics and performance monitoring</li>
+            <li>Customer support services</li>
+            <li>Payment processing</li>
+        </ul>
+
+        <h3>3.2 AI and Machine Learning Partners</h3>
+        <p>Photographs and health data may be shared with AI/ML service providers for analysis and model training.</p>
+
+        <h3>3.3 Business Transfers</h3>
+        <p>If BetSlips LLC is involved in a merger, acquisition, or sale of assets, your information may be transferred as part of that transaction.</p>
+
+        <h3>3.4 Legal Requirements</h3>
+        <p>We may disclose information if required by law, court order, or government request.</p>
+
+        <h3>3.5 Aggregated/Anonymized Data</h3>
+        <p>We may share aggregated or anonymized data that cannot identify you for research, marketing, or other purposes.</p>
+
+        <h3>3.6 With Your Consent</h3>
+        <p>We may share information for other purposes with your explicit consent.</p>
+
+        <!-- 4 -->
+        <h2>4. Data Retention</h2>
+        <ul>
+            <li><strong>Account Data:</strong> Retained while your account is active and for up to 3 years after deletion</li>
+            <li><strong>Health Logs:</strong> Retained indefinitely for research and improvement purposes</li>
+            <li><strong>Photographs:</strong> Retained indefinitely as property of BetSlips LLC</li>
+            <li><strong>Analytics Data:</strong> Retained for up to 5 years</li>
+        </ul>
+
+        <!-- 5 -->
+        <h2>5. Data Security</h2>
+        <p>We implement reasonable administrative, technical, and physical security measures to protect your information, including:</p>
+        <ul>
+            <li>Encryption of data in transit and at rest</li>
+            <li>Secure cloud infrastructure</li>
+            <li>Access controls and authentication</li>
+            <li>Regular security assessments</li>
+        </ul>
+        <p>However, no method of transmission or storage is 100% secure. We cannot guarantee absolute security of your data.</p>
+
+        <!-- 6 -->
+        <h2>6. Your Rights and Choices</h2>
+
+        <h3>6.1 Access and Export</h3>
+        <p>You can access your data within the App and export it in CSV or JSON format.</p>
+
+        <h3>6.2 Correction</h3>
+        <p>You can update your profile information at any time through the App.</p>
+
+        <h3>6.3 Deletion</h3>
+        <p>You may request deletion of your account and associated data by contacting us. Note that:</p>
+        <ul>
+            <li>Photographs remain property of BetSlips LLC and may not be deleted</li>
+            <li>Certain data may be retained for legal or legitimate business purposes</li>
+            <li>Anonymized or aggregated data derived from your information may be retained</li>
+        </ul>
+
+        <h3>6.4 Push Notifications</h3>
+        <p>You can opt out of push notifications through your device settings.</p>
+
+        <h3>6.5 Do Not Track</h3>
+        <p>The App does not respond to "Do Not Track" signals.</p>
+
+        <!-- 7 -->
+        <h2>7. Children's Privacy</h2>
+        <p>Pooply is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If we learn that we have collected information from a child under 13, we will delete it promptly.</p>
+
+        <!-- 8 -->
+        <h2>8. International Data Transfers</h2>
+        <p>Your information may be transferred to and processed in countries other than your country of residence. These countries may have different data protection laws. By using the App, you consent to the transfer of your information to the United States and other countries.</p>
+
+        <!-- 9 -->
+        <h2>9. Third-Party Services</h2>
+        <p>The App may contain links to third-party websites or services. We are not responsible for the privacy practices of these third parties. We encourage you to review their privacy policies.</p>
+
+        <!-- 10 -->
+        <h2>10. California Privacy Rights</h2>
+        <p>If you are a California resident, you have certain rights under the California Consumer Privacy Act (CCPA):</p>
+        <ul>
+            <li><strong>Right to Know:</strong> Request information about data collection and sharing</li>
+            <li><strong>Right to Delete:</strong> Request deletion of your personal information (subject to exceptions)</li>
+            <li><strong>Right to Opt-Out:</strong> Opt out of the sale of personal information</li>
+            <li><strong>Right to Non-Discrimination:</strong> Not be discriminated against for exercising your rights</li>
+        </ul>
+        <p>To exercise these rights, contact us at <a href="mailto:privacy@pooply.app">privacy@pooply.app</a>.</p>
+
+        <!-- 11 -->
+        <h2>11. European Privacy Rights</h2>
+        <p>If you are in the European Economic Area (EEA), you have rights under the General Data Protection Regulation (GDPR):</p>
+        <ul>
+            <li>Access your personal data</li>
+            <li>Rectify inaccurate data</li>
+            <li>Request erasure (subject to limitations)</li>
+            <li>Restrict processing</li>
+            <li>Data portability</li>
+            <li>Object to processing</li>
+            <li>Withdraw consent</li>
+        </ul>
+        <p>Our legal bases for processing include consent, contract performance, legitimate interests, and legal compliance.</p>
+
+        <!-- 12 -->
+        <h2>12. Changes to This Privacy Policy</h2>
+        <p>We may update this Privacy Policy from time to time. We will notify you of material changes by:</p>
+        <ul>
+            <li>Posting the updated policy in the App</li>
+            <li>Updating the "Last Updated" date</li>
+            <li>Sending a push notification or email (for significant changes)</li>
+        </ul>
+        <p>Your continued use of the App after changes constitutes acceptance of the updated policy.</p>
+
+        <!-- 13 - Contact -->
+        <h2>13. Contact Us</h2>
+
+        <div class="contact-card">
+            <h3>BetSlips LLC</h3>
+            <p>Email: <a href="mailto:privacy@pooply.app">privacy@pooply.app</a></p>
+            <p>Website: <a href="https://pooply.app">pooply.app</a></p>
+            <p style="margin-top: 12px;">Data Protection: <a href="mailto:dpo@pooply.app">dpo@pooply.app</a></p>
+        </div>
+
+        <!-- 14 - Summary -->
+        <h2>14. Summary of Key Points</h2>
+
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th>What We Collect</th>
+                    <th>How We Use It</th>
+                    <th>Your Control</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Account info (name, age, weight, sex)</td>
+                    <td>Personalize experience</td>
+                    <td>Edit in App</td>
+                </tr>
+                <tr>
+                    <td>Health logs</td>
+                    <td>Generate insights &amp; scores</td>
+                    <td>Export anytime</td>
+                </tr>
+                <tr>
+                    <td>Photographs</td>
+                    <td>AI analysis, model training</td>
+                    <td>Upload is optional</td>
+                </tr>
+                <tr>
+                    <td>Usage data</td>
+                    <td>Improve App</td>
+                    <td>Limited</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="takeaways">
+            <p><strong>Key Takeaways:</strong></p>
+            <ul>
+                <li>Photographs uploaded become property of BetSlips LLC</li>
+                <li>Health data is used to provide personalized insights</li>
+                <li>You can export your data at any time</li>
+                <li>Some data may be retained even after account deletion</li>
+            </ul>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>By using Pooply, you acknowledge that you have read and understood this Privacy Policy.</p>
+            <em>&copy; 2026 BetSlips LLC. All rights reserved.</em>
+        </div>
+
+    </div>
+</body>
+</html>

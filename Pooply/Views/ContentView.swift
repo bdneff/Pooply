@@ -14,89 +14,196 @@ enum Tab: CaseIterable {
     var icon: String {
         switch self {
             case .home: return "house.fill"
-            case .insights: return "chart.line.uptrend.xyaxis"
+            case .insights: return "chart.bar.fill"
         }
     }
 }
 
 struct ContentView: View {
     @EnvironmentObject var userViewModel: UserViewModel
+    @EnvironmentObject var subscriptionService: SubscriptionService
 
     @State private var selectedTab: Tab = .home
-    @State private var didPressPoopButton: Bool = false
     @State private var showProfileModal: Bool = false
     @State private var showCameraView: Bool = false
     @State private var showManualEntry: Bool = false
-    @State private var showWelcomeView: Bool = true
-    
+    @State private var showRatingCard: Bool = false
+    @State private var showPaywall: Bool = false
+    @State private var showLogOptions: Bool = false
+
     var body: some View {
         ZStack {
-            Color(hex: "#cff1e5").ignoresSafeArea()
-            BlurredBackgroundView()
+            Theme.Colors.background.ignoresSafeArea()
 
-            if showWelcomeView {
-                WelcomeView(isPresented: $showWelcomeView)
-                    .transition(.move(edge: .bottom).combined(with: .opacity))
-            } else {
-                VStack {
-                    // Switch between views
-                    switch selectedTab {
-                    case .home:
-                        HomeView(showCameraView: $showCameraView, showManualEntry: $showManualEntry)
-                    case .insights:
-                        InsightsView()
-                            .environmentObject(userViewModel)
-                    }
+            VStack(spacing: 0) {
+                switch selectedTab {
+                case .home:
+                    HomeView(
+                        showCameraView: $showCameraView,
+                        showManualEntry: $showManualEntry,
+                        showProfileModal: $showProfileModal
+                    )
+                case .insights:
+                    InsightsView()
+                        .environmentObject(userViewModel)
                 }
-                .transition(.move(edge: .top).combined(with: .opacity))
+            }
+            .animation(Theme.Animation.spring, value: selectedTab)
 
-                // Floating tab bar with ultra thin material
-                VStack {
-                    Spacer()
-                    HStack(spacing: 32) {
-                        Button(action: { selectedTab = .home }) {
-                            Image(systemName: "house.fill")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                                .foregroundStyle(selectedTab == .home ? Color(hex: "#19b888") : Color(hex: "#1f1f1f"))
-                        }
-                        Button(action: { showCameraView = true }) {
-                            Image(systemName: "plus")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 20, height: 20)
-                                .foregroundStyle(Color(hex: "#1f1f1f"))
-                                .bold()
-                                .padding(8.0)
-                                .background(Color(hex: "#19b888"))
-                                .clipShape(Circle())
-                        }
-                        Button(action: { selectedTab = .insights }) {
-                            Image(systemName: "chart.line.uptrend.xyaxis")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: 24, height: 24)
-                                .foregroundStyle(selectedTab == .insights ? Color(hex: "#19b888") : Color(hex: "#1f1f1f"))
+            // Floating Tab Bar — FAB shows log options
+            VStack {
+                Spacer()
+                FloatingTabBar(
+                    selectedTab: $selectedTab,
+                    onAddTap: {
+                        let impact = UIImpactFeedbackGenerator(style: .medium)
+                        impact.impactOccurred()
+                        withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
+                            showLogOptions = true
                         }
                     }
-                    .padding(8.0)
-                    .padding(.horizontal, 12.0)
-                    .background(Color(hex: "#e5fff7"))
-                    .clipShape(Capsule())
-                }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
+                )
+            }
+
+            // Log Options Overlay
+            if showLogOptions {
+                logOptionsOverlay
+            }
+
+            // Rating Card Overlay
+            if showRatingCard {
+                RatingCard(isPresented: $showRatingCard)
             }
         }
         .fullScreenCover(isPresented: $showCameraView) {
             CameraView(isPresented: $showCameraView, showManualEntry: $showManualEntry)
+                .environmentObject(userViewModel)
+                .environmentObject(subscriptionService)
+        }
+        .fullScreenCover(isPresented: $showPaywall) {
+            PaywallView()
+                .environmentObject(subscriptionService)
         }
         .sheet(isPresented: $showManualEntry) {
             ManualEntryView(isPresented: $showManualEntry)
+                .environmentObject(userViewModel)
         }
         .sheet(isPresented: $showProfileModal) {
             ProfileModal(isPresented: $showProfileModal)
+                .environmentObject(userViewModel)
+                .environmentObject(subscriptionService)
         }
+        .onChange(of: userViewModel.logHistory.count) { _, newCount in
+            if RatingCard.shouldShowRating(logCount: newCount) {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    showRatingCard = true
+                }
+            }
+        }
+    }
+
+    // MARK: - Log Options Overlay
+
+    private var logOptionsOverlay: some View {
+        ZStack {
+            // Dimmed background
+            Color.black.opacity(0.55)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.18, dampingFraction: 0.8)) {
+                        showLogOptions = false
+                    }
+                }
+
+            VStack(spacing: Theme.Spacing.md) {
+                // AI Analysis Card
+                Button {
+                    withAnimation(.spring(response: 0.18, dampingFraction: 0.8)) {
+                        showLogOptions = false
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        if subscriptionService.canUseAIAnalysis {
+                            showCameraView = true
+                        } else {
+                            showPaywall = true
+                        }
+                    }
+                } label: {
+                    HStack(spacing: Theme.Spacing.md) {
+                        ZStack {
+                            Circle()
+                                .fill(Theme.Colors.primary.opacity(0.12))
+                                .frame(width: 48, height: 48)
+                            Image(systemName: "camera.fill")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(Theme.Colors.primary)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("AI Analysis")
+                                .font(Theme.Fonts.bodyBold())
+                                .foregroundColor(Theme.Colors.textPrimary)
+                            Text("Snap a photo for instant health insights")
+                                .font(Theme.Fonts.caption())
+                                .foregroundColor(Theme.Colors.textTertiary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Theme.Colors.neutralLight)
+                    }
+                    .padding(Theme.Spacing.md)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
+                    .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 6)
+                }
+
+                // Manual Entry Card
+                Button {
+                    withAnimation(.spring(response: 0.18, dampingFraction: 0.8)) {
+                        showLogOptions = false
+                    }
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        showManualEntry = true
+                    }
+                } label: {
+                    HStack(spacing: Theme.Spacing.md) {
+                        ZStack {
+                            Circle()
+                                .fill(Theme.Colors.neutral.opacity(0.12))
+                                .frame(width: 48, height: 48)
+                            Image(systemName: "pencil.line")
+                                .font(.system(size: 20, weight: .semibold))
+                                .foregroundColor(Theme.Colors.neutral)
+                        }
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Manual Entry")
+                                .font(Theme.Fonts.bodyBold())
+                                .foregroundColor(Theme.Colors.textPrimary)
+                            Text("Log your bowel movement details")
+                                .font(Theme.Fonts.caption())
+                                .foregroundColor(Theme.Colors.textTertiary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(Theme.Colors.neutralLight)
+                    }
+                    .padding(Theme.Spacing.md)
+                    .background(Color.white)
+                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
+                    .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 6)
+                }
+            }
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+            .transition(.scale(scale: 0.85).combined(with: .opacity))
+        }
+        .transition(.opacity)
     }
 }
 
@@ -108,10 +215,10 @@ struct ContentView: View {
                     name: "Preview User",
                     age: 25,
                     weight: 160,
-                    sex: "female"
+                    gender: "female"
                 ),
                 withDummyData: true
             )
         )
+        .environmentObject(SubscriptionService.shared)
 }
-

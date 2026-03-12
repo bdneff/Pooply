@@ -1,0 +1,133 @@
+{
+  "identifier" : "8A3F2B1E-4D5C-6E7F-8A9B-0C1D2E3F4A5B",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "0",
+    "_developerTeamID" : "",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : null,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "POOPLY_PRO",
+      "localizations" : [
+        {
+          "description" : "Unlock AI analysis and smart insights",
+          "displayName" : "Pooply Pro",
+          "locale" : "en_US"
+        }
+      ],
+      "name" : "POOPLY PRO",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "A1B2C3D4",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Full year of Pooply Pro",
+              "displayName" : "Pooply Pro Annual",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "pooply_annual",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Pooply Pro Annual",
+          "subscriptionGroupID" : "POOPLY_PRO",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "6.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "E5F6G7H8",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Monthly access to Pooply Pro",
+              "displayName" : "Pooply Pro Monthly",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "pooply_monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Pooply Pro Monthly",
+          "subscriptionGroupID" : "POOPLY_PRO",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
