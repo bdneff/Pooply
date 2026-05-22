@@ -2,7 +2,7 @@
 //  LogCard.swift
 //  Pooply
 //
-//  Redesigned Log Card - Phase 8
+//  Log Card — v3 with Bristol scale image in category-colored rounded rect
 //
 
 import SwiftUI
@@ -12,24 +12,24 @@ struct LogCard: View {
 
     var body: some View {
         HStack(spacing: Theme.Spacing.md) {
-            // Poop type image
+            // Bristol scale image in category-colored rounded rect
             Image(log.type.rawValue)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 44, height: 44)
+                .frame(width: 40, height: 40)
                 .padding(8)
-                .background(Theme.Colors.tealTint)
+                .background(categoryColor(for: log.poopScore).opacity(0.18))
                 .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous))
 
             // Day + time + category
             VStack(alignment: .leading, spacing: 2) {
                 Text(log.weekday)
                     .font(Theme.Fonts.bodyBold())
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .foregroundStyle(Theme.Colors.textOnGlass)
 
                 Text(timeString(from: log.timestamp))
                     .font(Theme.Fonts.caption())
-                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
 
                 Text(log.poopScore.rawValue.capitalized)
                     .font(Theme.Fonts.caption())
@@ -38,15 +38,18 @@ struct LogCard: View {
 
             Spacer()
 
-            // Category indicator
-            Circle()
-                .fill(categoryColor(for: log.poopScore))
-                .frame(width: 12, height: 12)
+            // Category badge (replaces dot)
+            Text(log.poopScore.rawValue.capitalized)
+                .font(Theme.Fonts.label(10))
+                .foregroundStyle(categoryColor(for: log.poopScore))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(categoryColor(for: log.poopScore).opacity(0.18))
+                .clipShape(Capsule())
         }
         .padding(Theme.Spacing.md)
-        .background(Theme.Colors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.large, style: .continuous))
-        .cardShadow()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassSurface(radius: Theme.Radius.large)
     }
 
     // MARK: - Helpers

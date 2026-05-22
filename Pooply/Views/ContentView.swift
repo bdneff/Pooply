@@ -2,96 +2,139 @@
 //  ContentView.swift
 //  Pooply
 //
-//  Created by Brandon Grossnickle on 9/19/25.
+//  v4 — Mesh bg, glass pill nav bottom-left, glass + FAB bottom-right.
+//  Home / Insights swap inline. Profile opens from mascot tap.
 //
 
 import SwiftUI
 
+// Legacy Tab enum kept so non-rewritten code paths still compile
 enum Tab: CaseIterable {
-    case home
-    case insights
+    case scan
+    case gut
+    case profile
 
-    var icon: String {
+    var iconFilled: String {
         switch self {
-            case .home: return "house.fill"
-            case .insights: return "chart.bar.fill"
+        case .scan: return "camera.fill"
+        case .gut: return "chart.bar.fill"
+        case .profile: return "person.fill"
         }
     }
+
+    var iconOutline: String {
+        switch self {
+        case .scan: return "camera"
+        case .gut: return "chart.bar"
+        case .profile: return "person"
+        }
+    }
+
+    var label: String {
+        switch self {
+        case .scan: return "Scan"
+        case .gut: return "Data"
+        case .profile: return "Profile"
+        }
+    }
+
+    var icon: String { iconFilled }
 }
 
 struct ContentView: View {
     @EnvironmentObject var userViewModel: UserViewModel
     @EnvironmentObject var subscriptionService: SubscriptionService
 
-    @State private var selectedTab: Tab = .home
-    @State private var showProfileModal: Bool = false
+    @State private var selectedPage: AppPage = .home
     @State private var showCameraView: Bool = false
     @State private var showManualEntry: Bool = false
-    @State private var showRatingCard: Bool = false
-    @State private var showPaywall: Bool = false
+    @State private var showProfile: Bool = false
     @State private var showLogOptions: Bool = false
+    @State private var showRatingCard: Bool = false
+    @State private var homeTimeframe: String = "WEEK"
 
     var body: some View {
-        ZStack {
-            Theme.Colors.background.ignoresSafeArea()
-
-            VStack(spacing: 0) {
-                switch selectedTab {
+        ZStack(alignment: .bottom) {
+            Group {
+                switch selectedPage {
                 case .home:
-                    HomeView(
-                        showCameraView: $showCameraView,
-                        showManualEntry: $showManualEntry,
-                        showProfileModal: $showProfileModal
-                    )
+                    MeshBackground()
                 case .insights:
-                    InsightsView()
-                        .environmentObject(userViewModel)
+                    InsightsBackground()
                 }
             }
-            .animation(Theme.Animation.spring, value: selectedTab)
+            .animation(.easeInOut(duration: 0.35), value: selectedPage)
 
-            // Floating Tab Bar — FAB shows log options
-            VStack {
+            Group {
+                switch selectedPage {
+                case .home:
+                    HomeView(
+                        selectedTimeframe: $homeTimeframe,
+                        showProfile: $showProfile,
+                        showLogOptions: $showLogOptions
+                    )
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+
+                case .insights:
+                    InsightsView(showProfile: $showProfile)
+                        .environmentObject(userViewModel)
+                        .environmentObject(subscriptionService)
+                        .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                }
+            }
+            .animation(.spring(response: 0.35, dampingFraction: 0.82), value: selectedPage)
+
+            HStack(alignment: .center) {
+                GlassNavPill(selected: $selectedPage)
                 Spacer()
-                FloatingTabBar(
-                    selectedTab: $selectedTab,
-                    onAddTap: {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
-                        withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
-                            showLogOptions = true
-                        }
-                    }
-                )
+                GlassFAB {
+                    showLogOptions = true
+                }
             }
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+            .padding(.bottom, 24)
 
-            // Log Options Overlay
-            if showLogOptions {
-                logOptionsOverlay
-            }
-
-            // Rating Card Overlay
             if showRatingCard {
                 RatingCard(isPresented: $showRatingCard)
+                    .zIndex(2)
             }
+        }
+        .sheet(isPresented: $showLogOptions) {
+            LogOptionsSheet(
+                onCamera: {
+                    showLogOptions = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        showCameraView = true
+                    }
+                },
+                onManual: {
+                    showLogOptions = false
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                        showManualEntry = true
+                    }
+                }
+            )
+            .presentationDetents([.fraction(0.42)])
+            .presentationDragIndicator(.visible)
+            .presentationBackground(.clear)
+        }
+        .sheet(isPresented: $showProfile) {
+            ProfileModal(isPresented: $showProfile)
+                .environmentObject(userViewModel)
+                .environmentObject(subscriptionService)
+                .presentationBackground(.clear)
+                .presentationDragIndicator(.visible)
         }
         .fullScreenCover(isPresented: $showCameraView) {
             CameraView(isPresented: $showCameraView, showManualEntry: $showManualEntry)
                 .environmentObject(userViewModel)
                 .environmentObject(subscriptionService)
         }
-        .fullScreenCover(isPresented: $showPaywall) {
-            PaywallView()
-                .environmentObject(subscriptionService)
-        }
         .sheet(isPresented: $showManualEntry) {
             ManualEntryView(isPresented: $showManualEntry)
                 .environmentObject(userViewModel)
-        }
-        .sheet(isPresented: $showProfileModal) {
-            ProfileModal(isPresented: $showProfileModal)
-                .environmentObject(userViewModel)
-                .environmentObject(subscriptionService)
+                .presentationBackground(.clear)
+                .presentationDragIndicator(.visible)
         }
         .onChange(of: userViewModel.logHistory.count) { _, newCount in
             if RatingCard.shouldShowRating(logCount: newCount) {
@@ -101,109 +144,169 @@ struct ContentView: View {
             }
         }
     }
+}
 
-    // MARK: - Log Options Overlay
+// MARK: - KPI Item (legacy)
 
-    private var logOptionsOverlay: some View {
-        ZStack {
-            // Dimmed background
-            Color.black.opacity(0.55)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    withAnimation(.spring(response: 0.18, dampingFraction: 0.8)) {
-                        showLogOptions = false
-                    }
-                }
+struct KPIItem: View {
+    let value: String
+    let unit: String
+    let label: String
 
-            VStack(spacing: Theme.Spacing.md) {
-                // AI Analysis Card
-                Button {
-                    withAnimation(.spring(response: 0.18, dampingFraction: 0.8)) {
-                        showLogOptions = false
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        if subscriptionService.canUseAIAnalysis {
-                            showCameraView = true
-                        } else {
-                            showPaywall = true
-                        }
-                    }
-                } label: {
-                    HStack(spacing: Theme.Spacing.md) {
-                        ZStack {
-                            Circle()
-                                .fill(Theme.Colors.primary.opacity(0.12))
-                                .frame(width: 48, height: 48)
-                            Image(systemName: "camera.fill")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(Theme.Colors.primary)
-                        }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(value)
+                    .font(Theme.Fonts.metric(28))
+                    .foregroundStyle(Theme.Colors.textOnGlass)
+                    .contentTransition(.numericText())
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("AI Analysis")
-                                .font(Theme.Fonts.bodyBold())
-                                .foregroundColor(Theme.Colors.textPrimary)
-                            Text("Snap a photo for instant health insights")
-                                .font(Theme.Fonts.caption())
-                                .foregroundColor(Theme.Colors.textTertiary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Theme.Colors.neutralLight)
-                    }
-                    .padding(Theme.Spacing.md)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-                    .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 6)
-                }
-
-                // Manual Entry Card
-                Button {
-                    withAnimation(.spring(response: 0.18, dampingFraction: 0.8)) {
-                        showLogOptions = false
-                    }
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                        showManualEntry = true
-                    }
-                } label: {
-                    HStack(spacing: Theme.Spacing.md) {
-                        ZStack {
-                            Circle()
-                                .fill(Theme.Colors.neutral.opacity(0.12))
-                                .frame(width: 48, height: 48)
-                            Image(systemName: "pencil.line")
-                                .font(.system(size: 20, weight: .semibold))
-                                .foregroundColor(Theme.Colors.neutral)
-                        }
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Manual Entry")
-                                .font(Theme.Fonts.bodyBold())
-                                .foregroundColor(Theme.Colors.textPrimary)
-                            Text("Log your bowel movement details")
-                                .font(Theme.Fonts.caption())
-                                .foregroundColor(Theme.Colors.textTertiary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(Theme.Colors.neutralLight)
-                    }
-                    .padding(Theme.Spacing.md)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-                    .shadow(color: Color.black.opacity(0.12), radius: 12, x: 0, y: 6)
+                if !unit.isEmpty {
+                    Text(unit)
+                        .font(Theme.Fonts.caption())
+                        .foregroundStyle(Theme.Colors.textTertiary)
                 }
             }
-            .padding(.horizontal, Theme.Spacing.screenHorizontal)
-            .transition(.scale(scale: 0.85).combined(with: .opacity))
+
+            Text(label)
+                .font(Theme.Fonts.caption())
+                .foregroundStyle(Theme.Colors.textSecondary)
         }
-        .transition(.opacity)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Mini Gauge KPI (legacy)
+
+struct MiniGaugeKPI: View {
+    let value: Int
+    let label: String
+    let icon: String
+    let color: Color
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ZStack {
+                Circle()
+                    .trim(from: 0, to: 0.75)
+                    .stroke(color.opacity(0.15), style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(135))
+
+                Circle()
+                    .trim(from: 0, to: 0.75 * (CGFloat(value) / 100.0))
+                    .stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                    .rotationEffect(.degrees(135))
+
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(color)
+            }
+            .frame(width: 44, height: 44)
+
+            Text("\(value)%")
+                .font(Theme.Fonts.bodyBold())
+                .foregroundStyle(Theme.Colors.textOnGlass)
+                .contentTransition(.numericText())
+
+            Text(label)
+                .font(Theme.Fonts.micro())
+                .foregroundStyle(Theme.Colors.textTertiary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
+
+// MARK: - Log Options Sheet (the FAB target)
+
+struct LogOptionsSheet: View {
+    let onCamera: () -> Void
+    let onManual: () -> Void
+
+    var body: some View {
+        ZStack {
+            FrostedSheetBackground()
+
+            VStack(spacing: 16) {
+                VStack(spacing: 4) {
+                    Text("How are we logging?")
+                        .font(Theme.Fonts.title(24))
+                        .foregroundStyle(Theme.Colors.textOnGlass)
+                    Text("Pick your method")
+                        .font(Theme.Fonts.body(14))
+                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.6))
+                }
+                .padding(.top, 24)
+                .padding(.bottom, 8)
+
+                HStack(spacing: 14) {
+                    LogOptionTile(
+                        title: "Scan",
+                        subtitle: "Use the camera",
+                        icon: "camera.fill",
+                        iconBackground: Theme.Colors.popBlue,
+                        action: onCamera
+                    )
+                    LogOptionTile(
+                        title: "Manual",
+                        subtitle: "Type it in",
+                        icon: "pencil.line",
+                        iconBackground: Theme.Colors.neutral900,
+                        action: onManual
+                    )
+                }
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+
+                Spacer(minLength: 0)
+            }
+        }
+    }
+}
+
+struct LogOptionTile: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let iconBackground: Color
+    let action: () -> Void
+
+    @State private var pressed: Bool = false
+
+    var body: some View {
+        Button {
+            Theme.Haptics.medium()
+            action()
+        } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                ZStack {
+                    Circle().fill(iconBackground)
+                        .frame(width: 44, height: 44)
+                    Image(systemName: icon)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(.white)
+                }
+
+                Spacer()
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(Theme.Fonts.heading(20))
+                        .foregroundStyle(Theme.Colors.textOnGlass)
+                    Text(subtitle)
+                        .font(Theme.Fonts.caption(13))
+                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.6))
+                }
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, minHeight: 140, alignment: .topLeading)
+            .contentShape(Rectangle())
+            .glassSurface(radius: 22)
+            .scaleEffect(pressed ? 0.95 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { isPressing in
+            withAnimation(Theme.Animation.press) { pressed = isPressing }
+        }, perform: {})
     }
 }
 
@@ -211,12 +314,7 @@ struct ContentView: View {
     ContentView()
         .environmentObject(
             UserViewModel(
-                user: User(
-                    name: "Preview User",
-                    age: 25,
-                    weight: 160,
-                    gender: "female"
-                ),
+                user: User(name: "Brandon", age: 25, weight: 160, gender: "male"),
                 withDummyData: true
             )
         )

@@ -31,14 +31,14 @@ struct OnboardingView: View {
                 ZStack {
                     switch state.phase {
                     case .welcome:
-                        WelcomeContent(state: state)
-                            .transition(slideTransition)
+                        AnimatedBenefitsIntro(state: state)
+                            .transition(.opacity)
 
                     case .features:
-                        // Only the content slides, not the header
-                        FeatureSlideContent(state: state)
-                            .id("feature-\(state.featureIndex)")
-                            .transition(slideTransition)
+                        // Dead branch — OnboardingState.next() now skips .features,
+                        // but route it through the animated intro just in case.
+                        AnimatedBenefitsIntro(state: state)
+                            .transition(.opacity)
 
                     case .auth:
                         AuthContent(state: state)
@@ -76,15 +76,15 @@ struct OnboardingView: View {
     // MARK: - Background
 
     private var backgroundGradient: some View {
-        LinearGradient(
-            colors: [
-                Theme.Colors.tealTint.opacity(state.phase == .welcome ? 1 : 0.3),
-                Theme.Colors.background,
-                Theme.Colors.background
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
+        Group {
+            // Everything past the animated intro lives on the blue mesh.
+            switch state.phase {
+            case .welcome, .features:
+                MeshBackground() // (the intro overlays this with its own bg)
+            case .profile, .questionnaire, .auth, .inviteCode, .completion:
+                MeshBackground()
+            }
+        }
         .animation(.easeInOut(duration: 0.5), value: state.phase)
     }
 
@@ -176,7 +176,7 @@ struct OnboardingProgressHeader: View {
                     state.back()
                 }) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .frame(width: 44, height: 44)
                 }
@@ -291,75 +291,106 @@ struct WelcomeContent: View {
     }
 }
 
-// MARK: - Benefit Slide Content (Image on top, copy underneath, button + dots at bottom)
+// MARK: - Feature Slide Content (Full-bleed wallpaper with floating particles)
 
 struct FeatureSlideContent: View {
     @ObservedObject var state: OnboardingState
 
     @State private var showContent = false
+    @State private var particlePhase: CGFloat = 0
 
     private var benefit: GutBenefit {
         GutBenefit.benefits[state.featureIndex]
     }
 
-    var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
+    // Accent color per slide for the floating particles
+    private var accentColor: Color {
+        switch state.featureIndex {
+        case 0: return Color(hex: "#B388FF")  // Serotonin — lavender
+        case 1: return Color(hex: "#3B82F6")  // Brain — blue
+        case 2: return Color(hex: "#00E89D")  // Energy — mint
+        case 3: return Color(hex: "#FFB800")  // Immunity — amber
+        default: return Color.white
+        }
+    }
 
-            // Image with padding and rounded corners
+    var body: some View {
+        ZStack {
+            // Full-bleed wallpaper image
             Image(benefit.imageName)
                 .resizable()
-                .scaledToFit()
-                .frame(maxWidth: .infinity)
-                .clipShape(RoundedRectangle(cornerRadius: 20))
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                .scaledToFill()
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .clipped()
+                .ignoresSafeArea()
                 .opacity(showContent ? 1 : 0)
-                .scaleEffect(showContent ? 1 : 0.96)
+                .scaleEffect(showContent ? 1 : 1.05)
 
-            // Copy section — centered, right under image
-            VStack(spacing: Theme.Spacing.sm) {
-                Text(benefit.title)
-                    .font(Theme.Fonts.title())
-                    .foregroundStyle(Theme.Colors.textPrimary)
-                    .multilineTextAlignment(.center)
+            // Floating particles overlay (simulates animation on static image)
+            FloatingParticles(color: accentColor, count: 12)
+                .opacity(showContent ? 0.6 : 0)
 
-                Text(benefit.description)
-                    .font(Theme.Fonts.body())
-                    .foregroundStyle(Theme.Colors.textSecondary)
-                    .multilineTextAlignment(.center)
-                    .lineSpacing(3)
-                    .fixedSize(horizontal: false, vertical: true)
+            // Bottom gradient for text readability
+            VStack {
+                Spacer()
+                LinearGradient(
+                    colors: [.clear, Color.black.opacity(0.7), Color.black.opacity(0.9)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 320)
             }
-            .padding(.horizontal, Theme.Spacing.screenHorizontal)
-            .padding(.top, Theme.Spacing.lg)
-            .opacity(showContent ? 1 : 0)
-            .offset(y: showContent ? 0 : 8)
+            .ignoresSafeArea()
 
-            Spacer()
+            // Content overlay
+            VStack(spacing: 0) {
+                Spacer()
 
-            // Continue button
-            Button(action: {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-                state.next()
-            }) {
-                Text(state.featureIndex == OnboardingState.featureCount - 1 ? "Continue" : "Next")
-                    .font(Theme.Fonts.bodyBold())
-            }
-            .elevatedButtonStyle()
-            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                // Copy section
+                VStack(spacing: Theme.Spacing.sm) {
+                    Text(benefit.title)
+                        .font(Theme.Fonts.title(32))
+                        .foregroundStyle(Color.white)
+                        .multilineTextAlignment(.center)
+                        .shadow(color: .black.opacity(0.5), radius: 8, y: 2)
 
-            // Page dots
-            HStack(spacing: 8) {
-                ForEach(0..<OnboardingState.featureCount, id: \.self) { index in
-                    Capsule()
-                        .fill(index == state.featureIndex ? Theme.Colors.primary : Theme.Colors.neutralLight.opacity(0.5))
-                        .frame(width: index == state.featureIndex ? 24 : 8, height: 8)
-                        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: state.featureIndex)
+                    Text(benefit.description)
+                        .font(Theme.Fonts.body())
+                        .foregroundStyle(Color.white.opacity(0.8))
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(3)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
+                .padding(.horizontal, Theme.Spacing.screenHorizontal + 4)
+                .opacity(showContent ? 1 : 0)
+                .offset(y: showContent ? 0 : 12)
+
+                Spacer().frame(height: Theme.Spacing.xl)
+
+                // Continue button
+                Button(action: {
+                    let impact = UIImpactFeedbackGenerator(style: .medium)
+                    impact.impactOccurred()
+                    state.next()
+                }) {
+                    Text(state.featureIndex == OnboardingState.featureCount - 1 ? "Continue" : "Next")
+                        .font(Theme.Fonts.bodyBold())
+                }
+                .elevatedButtonStyle(color: accentColor)
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+
+                // Page dots
+                HStack(spacing: 8) {
+                    ForEach(0..<OnboardingState.featureCount, id: \.self) { index in
+                        Capsule()
+                            .fill(index == state.featureIndex ? Color.white : Color.white.opacity(0.3))
+                            .frame(width: index == state.featureIndex ? 24 : 8, height: 8)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: state.featureIndex)
+                    }
+                }
+                .padding(.top, Theme.Spacing.md)
+                .padding(.bottom, Theme.Spacing.xxl)
             }
-            .padding(.top, Theme.Spacing.md)
-            .padding(.bottom, Theme.Spacing.xxl)
         }
         .onAppear {
             Analytics.logEvent("onboarding_feature", parameters: [
@@ -367,10 +398,83 @@ struct FeatureSlideContent: View {
                 "feature_title": benefit.title
             ])
             showContent = false
-            withAnimation(.easeOut(duration: 0.25)) {
+            withAnimation(.easeOut(duration: 0.4)) {
                 showContent = true
             }
         }
+    }
+}
+
+// MARK: - Floating Particles (subtle animation overlay for onboarding)
+
+struct FloatingParticles: View {
+    let color: Color
+    let count: Int
+
+    @State private var animate = false
+
+    var body: some View {
+        GeometryReader { geo in
+            ForEach(0..<count, id: \.self) { i in
+                let seed = CGFloat(i)
+                let size = CGFloat.random(in: 3...8)
+                let startX = (seed / CGFloat(count)) * geo.size.width
+                let startY = CGFloat.random(in: 0...geo.size.height)
+                let duration = Double.random(in: 4...8)
+                let delay = Double.random(in: 0...3)
+
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            colors: [color, color.opacity(0.2)],
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: size
+                        )
+                    )
+                    .frame(width: size, height: size)
+                    .shadow(color: color.opacity(0.4), radius: 4)
+                    .position(
+                        x: startX + (animate ? CGFloat.random(in: -20...20) : 0),
+                        y: startY + (animate ? -40 : 0)
+                    )
+                    .opacity(animate ? 0.8 : 0.2)
+                    .animation(
+                        .easeInOut(duration: duration)
+                        .repeatForever(autoreverses: true)
+                        .delay(delay),
+                        value: animate
+                    )
+            }
+        }
+        .onAppear { animate = true }
+        .allowsHitTesting(false)
+    }
+}
+
+// MARK: - Survey Header (mascot removed for vertical room)
+
+struct SurveyMascotHeader: View {
+    let title: String
+    let subtitle: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title)
+                .font(.custom("PlusJakartaSans-ExtraBold", size: 26))
+                .foregroundStyle(Theme.Colors.textOnMesh)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+                .multilineTextAlignment(.leading)
+
+            if let subtitle, !subtitle.isEmpty {
+                Text(subtitle)
+                    .font(Theme.Fonts.body(14))
+                    .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.7))
+                    .multilineTextAlignment(.leading)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -381,74 +485,54 @@ struct ProfileStepContent: View {
     @FocusState private var nameFieldFocused: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Scrollable content
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: Theme.Spacing.lg) {
-                    // Mascot
-                    MascotCircle(size: 80)
-                        .padding(.top, Theme.Spacing.lg)
-
-                    // Question text + skip
-                    VStack(spacing: Theme.Spacing.sm) {
-                        Text(stepTitle)
-                            .font(Theme.Fonts.heading())
-                            .foregroundStyle(Theme.Colors.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, Theme.Spacing.md)
-
-                        if let subtitle = stepSubtitle {
-                            Text(subtitle)
-                                .font(Theme.Fonts.caption())
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-
-                        // Skip button (not for name — name is required)
-                        if state.profileStepIndex != 0 {
-                            Button(action: {
-                                state.next()
-                            }) {
-                                Text("Skip this step")
-                                    .font(Theme.Fonts.caption())
-                                    .foregroundStyle(Theme.Colors.textTertiary)
-                            }
-                        }
-                    }
-
-                    // Step-specific input
-                    stepContent
-                        .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-                    // Bottom spacer
-                    Spacer().frame(height: 120)
-                }
-            }
-
-            // PINNED Continue button at bottom
-            VStack(spacing: 0) {
-                LinearGradient(
-                    colors: [Theme.Colors.background.opacity(0), Theme.Colors.background],
-                    startPoint: .top,
-                    endPoint: .bottom
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
+                SurveyMascotHeader(
+                    title: stepTitle,
+                    subtitle: stepSubtitle
                 )
-                .frame(height: 24)
-
-                Button(action: {
-                    let impact = UIImpactFeedbackGenerator(style: .medium)
-                    impact.impactOccurred()
-                    nameFieldFocused = false
-                    state.next()
-                }) {
-                    Text("Continue")
-                        .font(Theme.Fonts.bodyBold())
-                }
-                .elevatedButtonStyle(color: continueDisabled ? Theme.Colors.neutralLight : Theme.Colors.primary)
-                .animation(.easeInOut(duration: 0.2), value: continueDisabled)
-                .disabled(continueDisabled)
                 .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.bottom, Theme.Spacing.lg)
-                .background(Theme.Colors.background)
+                .padding(.top, Theme.Spacing.lg)
+
+                if state.profileStepIndex != 0 {
+                    Button(action: { state.next() }) {
+                        Text("Skip this step")
+                            .font(Theme.Fonts.caption())
+                            .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.62))
+                    }
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                }
+
+                // Step-specific input
+                stepContent
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+
+                // Bottom spacer keeps the last input above the floating button
+                // even before the keyboard inset is applied.
+                Spacer().frame(height: 24)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        // Continue floats in the safe-area inset, so the keyboard pushes the
+        // entire button group up cleanly without crushing the input.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            Button(action: {
+                let impact = UIImpactFeedbackGenerator(style: .medium)
+                impact.impactOccurred()
+                nameFieldFocused = false
+                state.next()
+            }) {
+                Text("Continue")
+                    .font(Theme.Fonts.bodyBold())
+            }
+            .elevatedButtonStyle(color: Theme.Colors.neutral900, height: 56)
+            .animation(.easeInOut(duration: 0.2), value: continueDisabled)
+            .disabled(continueDisabled)
+            .opacity(continueDisabled ? 0.55 : 1.0)
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+            .padding(.top, Theme.Spacing.md)
+            .padding(.bottom, Theme.Spacing.lg)
         }
         .onAppear {
             Analytics.logEvent("onboarding_profile_\(stepEventName)", parameters: [
@@ -522,11 +606,9 @@ struct ProfileStepContent: View {
     private var nameStep: some View {
         TextField("Enter your name", text: $state.name)
             .font(Theme.Fonts.body())
-            .foregroundStyle(Theme.Colors.textPrimary)
+            .foregroundStyle(Theme.Colors.textOnGlass)
             .padding(Theme.Spacing.md)
-            .background(Theme.Colors.backgroundSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-            .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+            .glassSurface(radius: Theme.Radius.medium)
             .focused($nameFieldFocused)
             .submitLabel(.done)
             .onSubmit {
@@ -560,9 +642,8 @@ struct ProfileStepContent: View {
         }
         .pickerStyle(.wheel)
         .frame(height: 180)
-        .background(Theme.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .frame(maxWidth: .infinity)
+        .glassSurface(radius: Theme.Radius.medium)
     }
 
     private var weightStep: some View {
@@ -573,9 +654,8 @@ struct ProfileStepContent: View {
         }
         .pickerStyle(.wheel)
         .frame(height: 180)
-        .background(Theme.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .frame(maxWidth: .infinity)
+        .glassSurface(radius: Theme.Radius.medium)
     }
 }
 
@@ -591,97 +671,79 @@ struct QuestionnaireContent: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Scrollable content
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: Theme.Spacing.lg) {
-                    // Mascot
-                    MascotCircle(size: 80)
-                        .padding(.top, Theme.Spacing.lg)
-
-                    // Question text
-                    VStack(spacing: Theme.Spacing.sm) {
-                        Text(question.question)
-                            .font(Theme.Fonts.heading())
-                            .foregroundStyle(Theme.Colors.textPrimary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, Theme.Spacing.md)
-
-                        if let subtitle = question.subtitle {
-                            Text(subtitle)
-                                .font(Theme.Fonts.caption())
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-
-                        Button(action: {
-                            selectedAnswers = []
-                            state.next()
-                        }) {
-                            Text("Skip this question")
-                                .font(Theme.Fonts.caption())
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-                    }
-
-                    // Answer options
-                    VStack(spacing: Theme.Spacing.sm) {
-                        ForEach(question.options, id: \.self) { option in
-                            AnswerOptionButton(
-                                title: option,
-                                isSelected: selectedAnswers.contains(option),
-                                action: {
-                                    let impact = UIImpactFeedbackGenerator(style: .medium)
-                                    impact.impactOccurred()
-
-                                    withAnimation(Theme.Animation.spring) {
-                                        if question.allowsMultiple {
-                                            if selectedAnswers.contains(option) {
-                                                selectedAnswers.remove(option)
-                                            } else {
-                                                selectedAnswers.insert(option)
-                                            }
-                                        } else {
-                                            selectedAnswers = [option]
-                                        }
-                                    }
-                                }
-                            )
-                        }
-                    }
-                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-                    // Bottom spacer so content isn't blocked by pinned button
-                    Spacer().frame(height: 120)
-                }
-            }
-
-            // PINNED Continue button at bottom
-            VStack(spacing: 0) {
-                // Fade gradient
-                LinearGradient(
-                    colors: [Theme.Colors.background.opacity(0), Theme.Colors.background],
-                    startPoint: .top,
-                    endPoint: .bottom
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
+                SurveyMascotHeader(
+                    title: question.question,
+                    subtitle: question.subtitle
                 )
-                .frame(height: 24)
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                .padding(.top, Theme.Spacing.lg)
 
                 Button(action: {
-                    let impact = UIImpactFeedbackGenerator(style: .medium)
-                    impact.impactOccurred()
-                    state.answers[question.id] = Array(selectedAnswers)
                     selectedAnswers = []
                     state.next()
                 }) {
-                    Text("Continue")
-                        .font(Theme.Fonts.bodyBold())
+                    Text("Skip this question")
+                        .font(Theme.Fonts.caption())
+                        .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.62))
                 }
-                .elevatedButtonStyle(color: selectedAnswers.isEmpty ? Theme.Colors.neutralLight : Theme.Colors.primary)
-                .animation(.easeInOut(duration: 0.2), value: selectedAnswers.isEmpty)
-                .disabled(selectedAnswers.isEmpty)
                 .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.bottom, Theme.Spacing.lg)
-                .background(Theme.Colors.background)
+
+                // Answer options
+                VStack(spacing: Theme.Spacing.sm) {
+                    ForEach(question.options, id: \.self) { option in
+                        AnswerOptionButton(
+                            title: option,
+                            isSelected: selectedAnswers.contains(option),
+                            action: {
+                                let impact = UIImpactFeedbackGenerator(style: .medium)
+                                impact.impactOccurred()
+
+                                withAnimation(Theme.Animation.spring) {
+                                    if question.allowsMultiple {
+                                        if selectedAnswers.contains(option) {
+                                            selectedAnswers.remove(option)
+                                        } else {
+                                            selectedAnswers.insert(option)
+                                        }
+                                    } else {
+                                        selectedAnswers = [option]
+                                    }
+                                }
+                            }
+                        )
+                    }
+                }
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+
+                // Bottom breathing room above the floating Continue button.
+                Spacer().frame(height: 24)
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // PINNED Continue button — floats above the keyboard cleanly.
+            Button(action: {
+                let impact = UIImpactFeedbackGenerator(style: .medium)
+                impact.impactOccurred()
+                state.answers[question.id] = Array(selectedAnswers)
+                selectedAnswers = []
+                state.next()
+            }) {
+                Text("Continue")
+                    .font(Theme.Fonts.bodyBold())
+            }
+            .elevatedButtonStyle(
+                color: selectedAnswers.isEmpty ? Theme.Colors.neutral400 : Theme.Colors.neutral900,
+                height: 56
+            )
+            .animation(.easeInOut(duration: 0.2), value: selectedAnswers.isEmpty)
+            .disabled(selectedAnswers.isEmpty)
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+            .padding(.top, Theme.Spacing.md)
+            .padding(.bottom, Theme.Spacing.lg)
         }
         .onAppear {
             Analytics.logEvent("onboarding_question", parameters: [

@@ -18,15 +18,15 @@ struct FloatingTabBar: View {
                 FloatingTabItem(
                     icon: "house.fill",
                     label: "Home",
-                    isSelected: selectedTab == .home,
-                    action: { selectedTab = .home }
+                    isSelected: selectedTab == .scan,
+                    action: { selectedTab = .scan }
                 )
 
                 FloatingTabItem(
                     icon: "chart.bar.fill",
                     label: "Insights",
-                    isSelected: selectedTab == .insights,
-                    action: { selectedTab = .insights }
+                    isSelected: selectedTab == .gut,
+                    action: { selectedTab = .gut }
                 )
             }
             .padding(.horizontal, 24)
@@ -121,7 +121,7 @@ private struct FloatingTabItem: View {
         }) {
             VStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 20, weight: .semibold))
+                    .font(.system(size: 20, weight: .bold))
 
                 Text(label)
                     .font(Theme.Fonts.micro())
@@ -236,7 +236,7 @@ struct FABButtonStyle: ButtonStyle {
         VStack {
             Spacer()
             FloatingTabBar(
-                selectedTab: .constant(.home),
+                selectedTab: .constant(.scan),
                 onAddTap: {}
             )
         }

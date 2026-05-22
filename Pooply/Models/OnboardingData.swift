@@ -18,22 +18,22 @@ struct GutBenefit: Identifiable {
 
     static let benefits: [GutBenefit] = [
         GutBenefit(
-            imageName: "onboarding_1",
+            imageName: "onboard_serotonin",
             title: "Your Gut Makes You Happy",
             description: "90% of serotonin—your 'feel good' hormone—is made in your gut. When digestion is off, your mood follows."
         ),
         GutBenefit(
-            imageName: "onboarding_2",
+            imageName: "onboard_brainpower",
             title: "Think Clearly, Feel Sharp",
             description: "Brain fog, poor focus, and fatigue are signs of an unhappy gut. Digestive health directly impacts mental performance."
         ),
         GutBenefit(
-            imageName: "onboarding_3",
+            imageName: "onboard_energy",
             title: "Wake Up Energized",
             description: "Poor digestion means poor nutrient absorption. When your gut thrives, you get more energy from food all day long."
         ),
         GutBenefit(
-            imageName: "onboarding_4",
+            imageName: "onboard_immunity",
             title: "Strengthen Your Immunity",
             description: "70% of your immune system lives in your gut. A healthy microbiome is your first line of defense against illness."
         )
@@ -256,10 +256,13 @@ class OnboardingState: ObservableObject {
         withAnimation(anim) {
             switch phase {
             case .welcome:
-                phase = .features
-                featureIndex = 0
+                // Animated intro replaces the old welcome + 4 feature slides.
+                // Jump straight to profile when the intro finishes.
+                phase = .profile
+                profileStepIndex = 0
 
             case .features:
+                // Dead branch — the animated intro skips .features entirely.
                 if featureIndex < Self.featureCount - 1 {
                     featureIndex += 1
                 } else {
@@ -283,9 +286,11 @@ class OnboardingState: ObservableObject {
                 }
 
             case .auth:
-                phase = .inviteCode
+                // Invite code phase skipped for beta — go straight to completion.
+                phase = .completion
 
             case .inviteCode:
+                // Kept for compatibility; never reached.
                 phase = .completion
 
             case .completion:
@@ -316,10 +321,9 @@ class OnboardingState: ObservableObject {
             case .profile:
                 if profileStepIndex > 0 {
                     profileStepIndex -= 1
-                } else {
-                    phase = .features
-                    featureIndex = Self.featureCount - 1
                 }
+                // No back from first profile step — the animated intro is not
+                // re-enterable, so we short-circuit here.
 
             case .questionnaire:
                 if questionIndex > 0 {
@@ -337,7 +341,8 @@ class OnboardingState: ObservableObject {
                 phase = .auth
 
             case .completion:
-                phase = .inviteCode
+                // Invite code skipped — go back to auth.
+                phase = .auth
             }
         }
     }

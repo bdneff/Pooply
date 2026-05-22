@@ -12,9 +12,11 @@ import RevenueCat
 class SubscriptionService: NSObject, ObservableObject {
     static let shared = SubscriptionService()
 
-    @Published var isSubscribed: Bool = false
+    // App is currently FREE — everyone is treated as subscribed.
+    // RevenueCat / paywall gating intentionally short-circuited.
+    @Published var isSubscribed: Bool = true
     @Published var offerings: Offerings?
-    @Published var isLoading: Bool = true
+    @Published var isLoading: Bool = false
 
     // StoreKit 2 fallback products
     @Published var storeProducts: [StoreKit.Product] = []
@@ -34,35 +36,30 @@ class SubscriptionService: NSObject, ObservableObject {
         set { UserDefaults.standard.set(newValue, forKey: freeAnalysesKey) }
     }
 
+    // App is free — no analysis cap.
     var freeAnalysesRemaining: Int {
-        max(0, Self.maxFreeAnalyses - freeAnalysesUsed)
+        Int.max
     }
 
     var canUseAIAnalysis: Bool {
-        isSubscribed || freeAnalysesRemaining > 0
+        true
     }
 
     func useAnalysis() {
-        if !isSubscribed {
-            freeAnalysesUsed += 1
-        }
+        // No-op while the app is free.
     }
 
     // MARK: - Configuration
 
     func configure() {
-        if UserDefaults.standard.bool(forKey: inviteAccessKey) {
-            self.isSubscribed = true
-        }
-
-        Purchases.logLevel = .debug
-        Purchases.configure(withAPIKey: "appl_MnpaNEJmMAixIEbWNKJDlqxfsJq")
-        Purchases.shared.delegate = self
-
-        Task {
-            await checkSubscriptionStatus()
-            await fetchOfferings()
-        }
+        // App is free for beta — RevenueCat is fully dormant.
+        // Everything that gated features is short-circuited; isSubscribed is
+        // always true and no purchase flow can be reached from the UI.
+        // Purchases.logLevel = .debug
+        // Purchases.configure(withAPIKey: "appl_MnpaNEJmMAixIEbWNKJDlqxfsJq")
+        // Purchases.shared.delegate = self
+        self.isSubscribed = true
+        self.isLoading = false
     }
 
     // MARK: - Invite Code Access
@@ -77,25 +74,8 @@ class SubscriptionService: NSObject, ObservableObject {
 
     @MainActor
     func checkSubscriptionStatus() async {
-        let hasInviteAccess = UserDefaults.standard.bool(forKey: inviteAccessKey)
-
-        // Check RevenueCat
-        var rcActive = false
-        do {
-            let customerInfo = try await Purchases.shared.customerInfo()
-            rcActive = customerInfo.entitlements["pro"]?.isActive == true
-        } catch { }
-
-        // Check StoreKit 2 directly (covers local sandbox purchases)
-        var skActive = false
-        for await result in Transaction.currentEntitlements {
-            if case .verified(_) = result {
-                skActive = true
-                break
-            }
-        }
-
-        self.isSubscribed = rcActive || skActive || hasInviteAccess
+        // App is free — short-circuit any RevenueCat / StoreKit check.
+        self.isSubscribed = true
         self.isLoading = false
     }
 
@@ -218,17 +198,7 @@ class SubscriptionService: NSObject, ObservableObject {
     // MARK: - Pro Notification
 
     func scheduleProNotification() {
-        guard !isSubscribed else { return }
-
-        let content = UNMutableNotificationContent()
-        content.title = "Unlock AI Poop Analysis"
-        content.body = "Upgrade to Pooply Pro for instant AI scoring, smart insights, and personalized recommendations."
-        content.sound = .default
-
-        // Schedule for 3 days after install
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 259200, repeats: false)
-        let request = UNNotificationRequest(identifier: "pooply_pro_promo", content: content, trigger: trigger)
-        UNUserNotificationCenter.current().add(request)
+        // No upsell while app is free.
     }
 }
 
@@ -236,10 +206,6 @@ class SubscriptionService: NSObject, ObservableObject {
 
 extension SubscriptionService: PurchasesDelegate {
     func purchases(_ purchases: Purchases, receivedUpdated customerInfo: CustomerInfo) {
-        DispatchQueue.main.async {
-            let hasActiveSubscription = customerInfo.entitlements["pro"]?.isActive == true
-            let hasInviteAccess = UserDefaults.standard.bool(forKey: self.inviteAccessKey)
-            self.isSubscribed = hasActiveSubscription || hasInviteAccess
-        }
+        // App is free — ignore RevenueCat updates and keep isSubscribed true.
     }
 }

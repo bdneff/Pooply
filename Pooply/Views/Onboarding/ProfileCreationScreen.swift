@@ -24,20 +24,19 @@ struct ProfileInputCard<Content: View>: View {
         VStack(alignment: .leading, spacing: Theme.Spacing.md) {
             HStack(spacing: Theme.Spacing.sm) {
                 Image(systemName: icon)
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.Colors.primary)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
 
                 Text(title)
-                    .font(Theme.Fonts.bodyBold())
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .font(Theme.Fonts.subheading(16))
+                    .foregroundStyle(Theme.Colors.textOnGlass)
             }
 
             content
         }
         .padding(Theme.Spacing.md)
-        .background(Theme.Colors.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-        .cardShadow()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassSurface(radius: Theme.Radius.medium)
     }
 }
 
@@ -48,22 +47,39 @@ struct GenderOptionButton: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @State private var pressed = false
+
     var body: some View {
         Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
+            Theme.Haptics.light()
             action()
         }) {
             Text(title)
                 .font(Theme.Fonts.bodyBold())
-                .foregroundStyle(isSelected ? Theme.Colors.textOnPrimary : Theme.Colors.textSecondary)
+                .foregroundStyle(Theme.Colors.textOnGlass)
                 .frame(maxWidth: .infinity)
-                .frame(height: 48)
-                .background(isSelected ? Theme.Colors.primary : Theme.Colors.backgroundSecondary)
-                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-                .shadow(color: Color.black.opacity(isSelected ? 0 : 0.04), radius: 4, x: 0, y: 2)
+                .frame(height: 60)
+                .contentShape(Rectangle())
+                .glassSurface(radius: Theme.Radius.medium)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
+                        .fill(Theme.Colors.iconBlue400.opacity(isSelected ? 0.12 : 0))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
+                        .stroke(
+                            Theme.Colors.iconBlue400.opacity(isSelected ? 1.0 : 0),
+                            lineWidth: 2.5
+                        )
+                )
+                .scaleEffect(pressed ? 0.97 : 1.0)
+                .animation(.easeOut(duration: 0.15), value: pressed)
+                .animation(.easeOut(duration: 0.18), value: isSelected)
         }
         .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            pressed = pressing
+        }, perform: {})
     }
 }
 
@@ -74,38 +90,63 @@ struct AnswerOptionButton: View {
     let isSelected: Bool
     let action: () -> Void
 
+    @State private var pressed = false
+
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            Theme.Haptics.light()
+            action()
+        }) {
             HStack {
                 Text(title)
                     .font(Theme.Fonts.body())
-                    .foregroundStyle(isSelected ? Theme.Colors.primary : Theme.Colors.textPrimary)
+                    .foregroundStyle(Theme.Colors.textOnGlass)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
 
                 Spacer()
 
                 // Checkmark circle
                 ZStack {
                     Circle()
-                        .stroke(isSelected ? Theme.Colors.primary : Theme.Colors.neutralLight, lineWidth: 2)
+                        .stroke(
+                            isSelected ? Theme.Colors.iconBlue400 : Theme.Colors.neutralLight,
+                            lineWidth: 2
+                        )
                         .frame(width: 24, height: 24)
 
                     if isSelected {
                         Circle()
-                            .fill(Theme.Colors.primary)
+                            .fill(Theme.Colors.iconBlue400)
                             .frame(width: 14, height: 14)
+                            .transition(.scale.combined(with: .opacity))
                     }
                 }
             }
-            .padding(Theme.Spacing.md)
-            .background(isSelected ? Theme.Colors.primary.opacity(0.08) : Theme.Colors.backgroundSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-            .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+            .padding(.horizontal, Theme.Spacing.md)
+            .padding(.vertical, 18)
+            .frame(maxWidth: .infinity, minHeight: 64, alignment: .leading)
+            .contentShape(Rectangle())
+            .glassSurface(radius: Theme.Radius.medium)
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
-                    .stroke(isSelected ? Theme.Colors.primary : Color.clear, lineWidth: 2)
+                    .fill(Theme.Colors.iconBlue400.opacity(isSelected ? 0.12 : 0))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
+                    .stroke(
+                        Theme.Colors.iconBlue400.opacity(isSelected ? 1.0 : 0),
+                        lineWidth: 2.5
+                    )
+            )
+            .scaleEffect(pressed ? 0.98 : 1.0)
+            .animation(.easeOut(duration: 0.15), value: pressed)
+            .animation(.easeOut(duration: 0.18), value: isSelected)
         }
         .buttonStyle(.plain)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { pressing in
+            pressed = pressing
+        }, perform: {})
     }
 }
 

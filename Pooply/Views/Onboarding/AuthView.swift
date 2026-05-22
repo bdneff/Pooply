@@ -36,13 +36,13 @@ struct AuthContent: View {
 
                 Text(isSignUp ? "Create Account" : "Welcome Back")
                     .font(Theme.Fonts.title())
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .foregroundStyle(Theme.Colors.textOnMesh)
 
                 Text(isSignUp
                      ? "Start your gut health journey"
                      : "Sign in to continue")
                     .font(Theme.Fonts.body())
-                    .foregroundStyle(Theme.Colors.textTertiary)
+                    .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.65))
             }
 
             Spacer().frame(height: Theme.Spacing.lg)
@@ -56,14 +56,14 @@ struct AuthContent: View {
             // Divider
             HStack {
                 Rectangle()
-                    .fill(Theme.Colors.neutralLight)
+                    .fill(Color.white.opacity(0.5))
                     .frame(height: 1)
                 Text("or")
                     .font(Theme.Fonts.caption())
-                    .foregroundStyle(Theme.Colors.textTertiary)
+                    .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.55))
                     .padding(.horizontal, Theme.Spacing.md)
                 Rectangle()
-                    .fill(Theme.Colors.neutralLight)
+                    .fill(Color.white.opacity(0.5))
                     .frame(height: 1)
             }
             .padding(.horizontal, Theme.Spacing.screenHorizontal)
@@ -118,8 +118,8 @@ struct AuthContent: View {
                 Text(isSignUp
                      ? "Already have an account? Sign In"
                      : "Don't have an account? Sign Up")
-                    .font(Theme.Fonts.caption())
-                    .foregroundStyle(Theme.Colors.primary)
+                    .font(Theme.Fonts.captionBold())
+                    .foregroundStyle(Theme.Colors.textOnMesh)
             }
             .padding(.top, Theme.Spacing.sm)
 
@@ -137,7 +137,7 @@ struct AuthContent: View {
                         .font(Theme.Fonts.bodyBold())
                 }
             }
-            .elevatedButtonStyle(color: isFormValid ? Theme.Colors.primary : Theme.Colors.neutralLight)
+            .elevatedButtonStyle(color: isFormValid ? Theme.Colors.neutral900 : Theme.Colors.neutral400)
             .animation(.easeInOut(duration: 0.2), value: isFormValid)
             .disabled(!isFormValid || isLoading)
             .padding(.horizontal, Theme.Spacing.screenHorizontal)
@@ -205,9 +205,9 @@ struct AppleSignInButton: View {
         Button(action: startAppleSignIn) {
             HStack(spacing: 8) {
                 Image(systemName: "apple.logo")
-                    .font(.system(size: 18, weight: .semibold))
+                    .font(.system(size: 18, weight: .bold))
                 Text("Continue with Apple")
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 17, weight: .bold))
             }
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
@@ -292,22 +292,20 @@ struct AuthTextField: View {
         HStack(spacing: Theme.Spacing.md) {
             Image(systemName: icon)
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Theme.Colors.textTertiary)
+                .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
                 .frame(width: 20)
 
             TextField(placeholder, text: $text)
                 .font(Theme.Fonts.body())
-                .foregroundStyle(Theme.Colors.textPrimary)
+                .foregroundStyle(Theme.Colors.textOnGlass)
                 .keyboardType(keyboardType)
                 .textContentType(textContentType)
                 .autocapitalization(.none)
                 .autocorrectionDisabled()
         }
         .padding(.horizontal, Theme.Spacing.md)
-        .frame(height: 52)
-        .background(Theme.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .frame(height: 56)
+        .glassSurface(radius: Theme.Radius.medium)
     }
 }
 
@@ -322,7 +320,7 @@ struct AuthPasswordField: View {
         HStack(spacing: Theme.Spacing.md) {
             Image(systemName: "lock.fill")
                 .font(.system(size: 16, weight: .medium))
-                .foregroundStyle(Theme.Colors.textTertiary)
+                .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
                 .frame(width: 20)
 
             Group {
@@ -333,7 +331,7 @@ struct AuthPasswordField: View {
                 }
             }
             .font(Theme.Fonts.body())
-            .foregroundStyle(Theme.Colors.textPrimary)
+            .foregroundStyle(Theme.Colors.textOnGlass)
             .textContentType(.password)
             .autocapitalization(.none)
             .autocorrectionDisabled()
@@ -343,14 +341,12 @@ struct AuthPasswordField: View {
             }) {
                 Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundStyle(Theme.Colors.textTertiary)
+                    .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
             }
         }
         .padding(.horizontal, Theme.Spacing.md)
-        .frame(height: 52)
-        .background(Theme.Colors.backgroundSecondary)
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .frame(height: 56)
+        .glassSurface(radius: Theme.Radius.medium)
     }
 }
 

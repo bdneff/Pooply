@@ -43,6 +43,12 @@ struct CameraView: View {
     @State private var isCameraAuthorized = AVCaptureDevice.authorizationStatus(for: .video) == .authorized
     @State private var hasRequestedPermission = AVCaptureDevice.authorizationStatus(for: .video) != .notDetermined
 
+    // Dedicated serial queue for all session configuration and start/stop calls.
+    // Without this, .onDisappear can fire stopRunning on main while startCamera is
+    // still inside beginConfiguration/commitConfiguration on a background queue,
+    // which throws NSGenericException.
+    private let sessionQueue = DispatchQueue(label: "com.pooply.camera.session")
+
     // Photo picker
     @State private var showPhotoPicker = false
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -116,7 +122,7 @@ struct CameraView: View {
                         }
                     }
                     .onDisappear {
-                        session.stopRunning()
+                        stopCamera()
                     }
 
                 // Overlay (only show controls when authorized)
@@ -127,7 +133,7 @@ struct CameraView: View {
                             Button(action: {
                                 let impact = UIImpactFeedbackGenerator(style: .light)
                                 impact.impactOccurred()
-                                session.stopRunning()
+                                stopCamera()
                                 isPresented = false
                             }) {
                                 Image(systemName: "xmark")
@@ -139,21 +145,7 @@ struct CameraView: View {
                             }
                             Spacer()
 
-                            // Free analyses remaining badge
-                            if !SubscriptionService.shared.isSubscribed {
-                                let remaining = SubscriptionService.shared.freeAnalysesRemaining
-                                HStack(spacing: 4) {
-                                    Image(systemName: "sparkles")
-                                        .font(.system(size: 12, weight: .bold))
-                                    Text("\(remaining) free")
-                                        .font(.system(size: 13, weight: .bold, design: .rounded))
-                                }
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(glassBackground)
-                                .clipShape(Capsule())
-                            }
+                            // Free analyses badge removed — app is free.
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 12)
@@ -184,7 +176,7 @@ struct CameraView: View {
                             PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "photo.on.rectangle")
-                                        .font(.system(size: 16, weight: .semibold))
+                                        .font(.system(size: 16, weight: .bold))
                                     Text("Library")
                                         .font(Theme.Fonts.caption())
                                 }
@@ -219,13 +211,13 @@ struct CameraView: View {
                             Button(action: {
                                 let impact = UIImpactFeedbackGenerator(style: .light)
                                 impact.impactOccurred()
-                                session.stopRunning()
+                                stopCamera()
                                 isPresented = false
                                 showManualEntry = true
                             }) {
                                 HStack(spacing: 8) {
                                     Image(systemName: "square.and.pencil")
-                                        .font(.system(size: 16, weight: .semibold))
+                                        .font(.system(size: 16, weight: .bold))
                                     Text("Manual")
                                         .font(Theme.Fonts.caption())
                                 }
@@ -413,9 +405,9 @@ struct CameraView: View {
     }
 
     func startCamera() {
-        guard !session.isRunning else { return }
+        sessionQueue.async {
+            guard !session.isRunning else { return }
 
-        DispatchQueue.global(qos: .userInitiated).async {
             session.beginConfiguration()
 
             // Remove existing inputs/outputs
@@ -436,6 +428,15 @@ struct CameraView: View {
 
             session.commitConfiguration()
             session.startRunning()
+        }
+    }
+
+    func stopCamera() {
+        // Serialized with startCamera so we never stop mid-configuration.
+        sessionQueue.async {
+            if session.isRunning {
+                session.stopRunning()
+            }
         }
     }
 }
@@ -517,7 +518,7 @@ struct ImagePreviewView: View {
                         Button(action: onRetake) {
                             HStack(spacing: 8) {
                                 Image(systemName: "arrow.counterclockwise")
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(.system(size: 16, weight: .bold))
                                 Text("Retake")
                                     .font(Theme.Fonts.bodyBold())
                             }
@@ -532,7 +533,7 @@ struct ImagePreviewView: View {
                         Button(action: onConfirm) {
                             HStack(spacing: 8) {
                                 Image(systemName: "wand.and.stars")
-                                    .font(.system(size: 16, weight: .semibold))
+                                    .font(.system(size: 16, weight: .bold))
                                 Text("Analyze")
                                     .font(Theme.Fonts.bodyBold())
                             }
@@ -559,150 +560,187 @@ struct AnalyzingView: View {
     let onCancel: () -> Void
     let onRetry: () -> Void
 
-    @State private var pulseAnimation = false
-    @State private var rotationAngle: Double = 0
-    @State private var dots = ""
+    @State private var sweepRotation: Double = 0
+    @State private var glowPulse: Bool = false
+    @State private var dotCount: Int = 0
 
-    let timer = Timer.publish(every: 0.5, on: .main, in: .common).autoconnect()
+    private let ringOuterDiameter: CGFloat = 300
+    private let ringThickness: CGFloat = 24
+
+    private let dotTimer = Timer.publish(every: 0.45, on: .main, in: .common).autoconnect()
+
+    private var dotsString: String {
+        String(repeating: ".", count: dotCount)
+    }
 
     var body: some View {
         ZStack {
-            // Beautiful gradient background
-            ZStack {
-                LinearGradient(
-                    colors: [
-                        Theme.Colors.tealTint,
-                        Theme.Colors.background,
-                        Theme.Colors.blueTint.opacity(0.3)
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
+            MeshBackground()
+                .ignoresSafeArea()
 
-                // Subtle animated gradient orbs
-                Circle()
-                    .fill(Theme.Colors.primary.opacity(0.15))
-                    .frame(width: 300, height: 300)
-                    .blur(radius: 80)
-                    .offset(x: -100, y: -200)
+            // Top chrome: thumbnail (left) + close (right)
+            VStack {
+                HStack(alignment: .center) {
+                    // Captured photo thumbnail
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: 60, height: 60)
+                        .clipShape(Circle())
+                        .overlay(
+                            Circle().stroke(Color.white.opacity(0.85), lineWidth: 2)
+                        )
+                        .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
 
-                Circle()
-                    .fill(Theme.Colors.tealTint.opacity(0.2))
-                    .frame(width: 250, height: 250)
-                    .blur(radius: 60)
-                    .offset(x: 120, y: 300)
+                    Spacer()
+
+                    CloseButton(action: onCancel)
+                }
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                .padding(.top, Theme.Spacing.md)
+
+                Spacer()
             }
-            .ignoresSafeArea()
 
-            VStack(spacing: Theme.Spacing.xl) {
-                Spacer()
-
-                // Animated mascot with rings
-                ZStack {
-                    // Outer pulsing ring
-                    Circle()
-                        .stroke(
-                            LinearGradient(
-                                colors: [Theme.Colors.primary.opacity(0.4), Theme.Colors.tealTint.opacity(0.3)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            lineWidth: 3
-                        )
-                        .frame(width: 180, height: 180)
-                        .scaleEffect(pulseAnimation ? 1.2 : 1.0)
-                        .opacity(pulseAnimation ? 0 : 0.6)
-
-                    // Middle ring
-                    Circle()
-                        .stroke(Theme.Colors.primary.opacity(0.3), lineWidth: 2)
-                        .frame(width: 140, height: 140)
-                        .rotationEffect(.degrees(rotationAngle))
-
-                    // Inner circle with mascot
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                colors: [Theme.Colors.primary.opacity(0.15), Theme.Colors.tealTint.opacity(0.1)],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 100, height: 100)
-
-                    MascotCircle(size: 72)
-                }
-
-                // Status text
-                VStack(spacing: Theme.Spacing.sm) {
-                    if let error = errorMessage {
-                        Text("Analysis Failed")
-                            .font(Theme.Fonts.heading())
-                            .foregroundStyle(Theme.Colors.blood)
-
-                        Text(error)
-                            .font(Theme.Fonts.body())
-                            .foregroundStyle(Theme.Colors.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, Theme.Spacing.xl)
-                    } else {
-                        Text("Analyzing\(dots)")
-                            .font(Theme.Fonts.heading())
-                            .foregroundStyle(Theme.Colors.textPrimary)
-                            .onReceive(timer) { _ in
-                                if dots.count >= 3 {
-                                    dots = ""
-                                } else {
-                                    dots += "."
-                                }
-                            }
-
-                        Text("Our AI is examining your sample")
-                            .font(Theme.Fonts.body())
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                    }
-                }
-
-                Spacer()
-
-                // Buttons
-                if errorMessage != nil {
-                    VStack(spacing: Theme.Spacing.md) {
-                        Button(action: onRetry) {
-                            Text("Try Again")
-                                .font(Theme.Fonts.bodyBold())
-                                .foregroundStyle(Theme.Colors.textOnPrimary)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 56)
-                                .background(Theme.Colors.primary)
-                                .clipShape(Capsule())
-                        }
-
-                        Button(action: onCancel) {
-                            Text("Cancel")
-                                .font(Theme.Fonts.body())
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-                    }
-                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                    .padding(.bottom, Theme.Spacing.xxl)
-                } else {
-                    Button(action: onCancel) {
-                        Text("Cancel")
-                            .font(Theme.Fonts.body())
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                    }
-                    .padding(.bottom, Theme.Spacing.xxl)
-                }
+            // Center stage
+            if errorMessage == nil {
+                analyzingStage
+            } else {
+                errorStage
             }
         }
         .onAppear {
-            withAnimation(.easeInOut(duration: 1.5).repeatForever(autoreverses: true)) {
-                pulseAnimation = true
+            // Indeterminate barber-pole sweep
+            withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                sweepRotation = 360
             }
-            withAnimation(.linear(duration: 8).repeatForever(autoreverses: false)) {
-                rotationAngle = 360
+            // Soft outer glow pulse
+            withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
+                glowPulse = true
             }
+        }
+        .onReceive(dotTimer) { _ in
+            dotCount = (dotCount + 1) % 4
+        }
+    }
+
+    // MARK: - Analyzing center stage
+
+    private var analyzingStage: some View {
+        VStack(spacing: Theme.Spacing.lg) {
+            Spacer()
+
+            ZStack {
+                // Soft outer glow that breathes
+                Circle()
+                    .fill(Theme.Colors.iconBlue400.opacity(glowPulse ? 0.32 : 0.16))
+                    .frame(width: ringOuterDiameter + 60, height: ringOuterDiameter + 60)
+                    .blur(radius: 28)
+
+                // Empty track
+                Circle()
+                    .stroke(
+                        Color.white.opacity(0.55),
+                        style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
+                    )
+                    .frame(width: ringOuterDiameter, height: ringOuterDiameter)
+
+                // Indeterminate sweeping arc — 30% of the circumference, spinning.
+                Circle()
+                    .trim(from: 0, to: 0.3)
+                    .stroke(
+                        AngularGradient(
+                            colors: [
+                                Theme.Colors.iconBlue300,
+                                Theme.Colors.iconBlue400,
+                                Theme.Colors.iconBlue500,
+                                Theme.Colors.iconBlue400
+                            ],
+                            center: .center,
+                            startAngle: .degrees(-90),
+                            endAngle: .degrees(270)
+                        ),
+                        style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
+                    )
+                    .frame(width: ringOuterDiameter, height: ringOuterDiameter)
+                    .rotationEffect(.degrees(sweepRotation - 90))
+
+                // Inside ring: label + animated dots
+                VStack(spacing: 6) {
+                    Text("Analyzing")
+                        .font(Theme.Fonts.heading(22))
+                        .foregroundStyle(Theme.Colors.neutral900)
+                    Text(dotsString)
+                        .font(.custom("PlusJakartaSans-ExtraBold", size: 28))
+                        .foregroundStyle(Theme.Colors.iconBlue500)
+                        .frame(height: 32)
+                        .frame(minWidth: 60)
+                }
+            }
+            .shadow(color: Theme.Colors.iconBlue500.opacity(0.22), radius: 24, x: 0, y: 10)
+
+            Spacer()
+
+            Text("Our AI is examining your sample")
+                .font(Theme.Fonts.body(15))
+                .foregroundStyle(Theme.Colors.neutral900.opacity(0.6))
+                .padding(.bottom, Theme.Spacing.xxl)
+        }
+    }
+
+    // MARK: - Error stage
+
+    private var errorStage: some View {
+        VStack(spacing: Theme.Spacing.lg) {
+            Spacer()
+
+            VStack(spacing: Theme.Spacing.sm) {
+                Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 44, weight: .bold))
+                    .foregroundStyle(Theme.Colors.hard)
+
+                Text("Analysis Failed")
+                    .font(Theme.Fonts.heading())
+                    .foregroundStyle(Theme.Colors.neutral900)
+
+                Text(errorMessage ?? "Something went wrong.")
+                    .font(Theme.Fonts.body())
+                    .foregroundStyle(Theme.Colors.neutral900.opacity(0.7))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, Theme.Spacing.xl)
+            }
+            .padding(Theme.Spacing.cardPadding)
+            .frame(maxWidth: .infinity)
+            .glassSurface(radius: Theme.Radius.large)
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+
+            Spacer()
+
+            VStack(spacing: Theme.Spacing.md) {
+                Button(action: onRetry) {
+                    Text("Try Again")
+                        .font(Theme.Fonts.bodyBold())
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(Theme.Colors.neutral900)
+                        .clipShape(Capsule())
+                        .cardShadow()
+                }
+                .buttonStyle(BouncyButtonStyle())
+
+                Button(action: onCancel) {
+                    Text("Cancel")
+                        .font(Theme.Fonts.bodyBold())
+                        .foregroundStyle(Theme.Colors.neutral900)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .glassSurface(radius: Theme.Radius.pill)
+                }
+                .buttonStyle(BouncyButtonStyle())
+            }
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+            .padding(.bottom, Theme.Spacing.xxl)
         }
     }
 }
@@ -716,196 +754,123 @@ struct AnalysisResultsView: View {
     let onRetake: () -> Void
     let onClose: () -> Void
 
-    @State private var showContent = false
+    @State private var gaugeFill: CGFloat = 0
     @State private var scoreAnimated: Int = 0
+    @State private var ringPulse: Bool = false
+    @State private var showSupporting: Bool = false
+    @State private var confettiStart: Date? = nil
 
-    // Use unified scoring from UserViewModel (factors in type, color, size, blood)
+    private let ringOuterDiameter: CGFloat = 300
+    private let ringThickness: CGFloat = 24
+
     private var percentileScore: Int {
         let log = result.toLog()
         return UserViewModel.calculatePoopScoreStatic(for: log)
     }
 
-    // Color based on score ranges (stricter thresholds)
     private var scoreColor: Color {
-        if percentileScore >= 85 {
-            return Theme.Colors.good // Green - only for truly good scores
-        } else if percentileScore >= 70 {
-            return Color(hex: "#F5A623") // Amber - decent but room for improvement
-        } else if percentileScore >= 50 {
-            return Theme.Colors.hard // Orange - needs work
-        } else {
-            return Color(hex: "#9C27B0") // Purple - poor scores
+        switch percentileScore {
+        case 85...100: return Theme.Colors.good
+        case 70..<85:  return Theme.Colors.amber
+        case 50..<70:  return Theme.Colors.hard
+        default:       return Theme.Colors.lavender
         }
     }
 
-    // Dynamic gradient for background - more visually interesting
-    private var backgroundGradient: LinearGradient {
-        let baseColor = scoreColor
-        return LinearGradient(
-            colors: [
-                baseColor.opacity(0.95),
-                baseColor,
-                baseColor.opacity(0.8),
-                baseColor.opacity(0.9)
-            ],
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
-        )
-    }
-
-    // Secondary accent color for visual interest
-    private var accentGradient: some View {
-        ZStack {
-            // Main gradient
-            backgroundGradient
-
-            // Subtle radial highlight at top
-            RadialGradient(
-                colors: [
-                    Color.white.opacity(0.2),
-                    Color.clear
-                ],
-                center: .topLeading,
-                startRadius: 0,
-                endRadius: 400
-            )
-
-            // Subtle dark gradient at bottom for depth
-            LinearGradient(
-                colors: [
-                    Color.clear,
-                    Color.black.opacity(0.15)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
+    private var darkScoreColor: Color {
+        switch percentileScore {
+        case 85...100: return Color(hex: "#14532D")
+        case 70..<85:  return Color(hex: "#78350F")
+        case 50..<70:  return Color(hex: "#7F1D1D")
+        default:       return Color(hex: "#3B0764")
         }
     }
 
     private var scoreLabel: String {
-        if percentileScore >= 85 {
-            return "Excellent"
-        } else if percentileScore >= 75 {
-            return "Good"
-        } else if percentileScore >= 60 {
-            return "Fair"
-        } else if percentileScore >= 45 {
-            return "Needs Work"
-        } else {
-            return "Poor"
+        switch percentileScore {
+        case 85...100: return "Excellent"
+        case 75..<85:  return "Good"
+        case 60..<75:  return "Fair"
+        case 45..<60:  return "Needs Work"
+        default:       return "Poor"
         }
     }
 
     var body: some View {
         ZStack {
-            // Full-screen dynamic gradient background
-            accentGradient
+            MeshBackground()
+                .ignoresSafeArea()
+
+            // Confetti burst layer — full-screen, behind content but above bg
+            ConfettiBurstView(startDate: confettiStart)
+                .allowsHitTesting(false)
                 .ignoresSafeArea()
 
             // Content
-            VStack(spacing: 0) {
-                // Top bar with close button
-                HStack {
-                    Button(action: onClose) {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white.opacity(0.9))
-                            .frame(width: 44, height: 44)
-                            .background(Color.white.opacity(0.2))
-                            .clipShape(Circle())
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    // Top bar
+                    HStack {
+                        CloseButton(action: onClose)
+                        Spacer()
                     }
-                    Spacer()
-                }
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.top, Theme.Spacing.md)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, Theme.Spacing.md)
 
-                Spacer()
+                    // MARK: - Hero: Gauge ring with giant score inside
+                    gaugeHero
+                        .padding(.top, Theme.Spacing.lg)
+                        .padding(.bottom, Theme.Spacing.lg)
 
-                // Main score section
-                VStack(spacing: Theme.Spacing.lg) {
-                    // Title
-                    Text("POOP SCORE")
-                        .font(Theme.Fonts.label(14))
-                        .tracking(3)
-                        .foregroundColor(.white.opacity(0.9))
-                        .opacity(showContent ? 1 : 0)
+                    // MARK: - Score Label
+                    VStack(spacing: 8) {
+                        Text("POOP SCORE")
+                            .font(Theme.Fonts.label(11))
+                            .foregroundStyle(darkScoreColor.opacity(0.55))
+                            .tracking(1.5)
 
-                    // Large score in white circle
-                    ZStack {
-                        // Outer glow ring
-                        Circle()
-                            .fill(Color.white.opacity(0.15))
-                            .frame(width: 200, height: 200)
-
-                        // Main white circle
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 170, height: 170)
-                            .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
-
-                        // Score number
-                        VStack(spacing: 4) {
-                            Text("\(scoreAnimated)")
-                                .font(Theme.Fonts.hero(72))
-                                .foregroundColor(scoreColor)
-                                .contentTransition(.numericText())
-
-                            Text("out of 100")
-                                .font(Theme.Fonts.caption(13))
-                                .foregroundColor(Theme.Colors.textTertiary)
-                        }
+                        Text(scoreLabel)
+                            .font(Theme.Fonts.heading())
+                            .foregroundStyle(darkScoreColor)
+                            .padding(.horizontal, 20)
+                            .padding(.vertical, 8)
+                            .background(scoreColor.opacity(0.25))
+                            .clipShape(Capsule())
                     }
-                    .scaleEffect(showContent ? 1 : 0.8)
-                    .opacity(showContent ? 1 : 0)
+                    .opacity(showSupporting ? 1 : 0)
+                    .padding(.bottom, Theme.Spacing.xl)
 
-                    // Score label badge
-                    Text(scoreLabel)
-                        .font(Theme.Fonts.bodyBold())
-                        .foregroundColor(.white)
-                        .padding(.horizontal, Theme.Spacing.lg)
-                        .padding(.vertical, Theme.Spacing.sm)
-                        .background(Color.white.opacity(0.25))
-                        .clipShape(Capsule())
-                        .opacity(showContent ? 1 : 0)
-                }
-
-                Spacer()
-
-                // Bottom section with analysis and metrics
-                VStack(spacing: Theme.Spacing.md) {
-                    // AI Analysis card
+                    // MARK: - AI Analysis Card (glass)
                     VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
                         HStack(spacing: Theme.Spacing.sm) {
                             Image(systemName: "sparkles")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(scoreColor)
-
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundStyle(scoreColor)
                             Text("AI Analysis")
                                 .font(Theme.Fonts.captionBold())
-                                .foregroundColor(Theme.Colors.textPrimary)
+                                .foregroundStyle(Theme.Colors.textOnGlass)
                         }
 
                         Text(result.analysis)
                             .font(Theme.Fonts.body(15))
-                            .foregroundColor(Theme.Colors.textSecondary)
+                            .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.78))
                             .lineSpacing(3)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(Theme.Spacing.md)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 4)
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 20)
+                    .padding(Theme.Spacing.cardPadding)
+                    .glassSurface(radius: 20)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .opacity(showSupporting ? 1 : 0)
+                    .offset(y: showSupporting ? 0 : 30)
 
-                    // Metrics row
+                    // MARK: - Metric Pills (glass)
                     HStack(spacing: Theme.Spacing.sm) {
                         ScoreMetricPill(
                             icon: "drop.fill",
                             value: "\(Int((result.hydrationPercentage ?? 0.5) * 100))%",
                             label: "Hydration",
-                            color: Theme.Colors.hydration
+                            color: Theme.Colors.iconBlue600
                         )
 
                         ScoreMetricPill(
@@ -924,24 +889,25 @@ struct AnalysisResultsView: View {
                             )
                         }
                     }
-                    .opacity(showContent ? 1 : 0)
-                    .offset(y: showContent ? 0 : 20)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, Theme.Spacing.md)
+                    .opacity(showSupporting ? 1 : 0)
+                    .offset(y: showSupporting ? 0 : 30)
 
-                    // Action buttons
+                    // MARK: - Action Buttons
                     HStack(spacing: Theme.Spacing.md) {
                         Button(action: onRetake) {
                             Text("Retake")
                                 .font(Theme.Fonts.bodyBold())
-                                .foregroundColor(scoreColor)
+                                .foregroundStyle(Theme.Colors.textOnGlass)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 56)
-                                .background(Color.white)
-                                .clipShape(Capsule())
+                                .glassSurface(radius: Theme.Radius.pill)
                         }
+                        .buttonStyle(BouncyButtonStyle())
 
                         Button(action: {
-                            let impact = UIImpactFeedbackGenerator(style: .medium)
-                            impact.impactOccurred()
+                            Theme.Haptics.success()
                             onSave()
                         }) {
                             HStack(spacing: Theme.Spacing.sm) {
@@ -950,45 +916,215 @@ struct AnalysisResultsView: View {
                                 Text("Save Log")
                                     .font(Theme.Fonts.bodyBold())
                             }
-                            .foregroundColor(scoreColor)
+                            .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .frame(height: 56)
-                            .background(Color.white)
+                            .background(Theme.Colors.neutral900)
                             .clipShape(Capsule())
-                            .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                            .cardShadow()
                         }
+                        .buttonStyle(BouncyButtonStyle())
                     }
-                    .padding(.top, Theme.Spacing.sm)
-                    .opacity(showContent ? 1 : 0)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, Theme.Spacing.lg)
+                    .padding(.bottom, Theme.Spacing.xxl)
+                    .opacity(showSupporting ? 1 : 0)
                 }
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.bottom, Theme.Spacing.xl)
             }
         }
-        .onAppear {
-            withAnimation(.spring(response: 0.6, dampingFraction: 0.8).delay(0.1)) {
-                showContent = true
+        .onAppear(perform: runRevealSequence)
+    }
+
+    // MARK: - Gauge hero (ring + score)
+
+    private var gaugeHero: some View {
+        ZStack {
+            // Empty track
+            Circle()
+                .stroke(
+                    Color.white.opacity(0.55),
+                    style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
+                )
+                .frame(width: ringOuterDiameter, height: ringOuterDiameter)
+
+            // Filled sweep — fills to score/100
+            Circle()
+                .trim(from: 0, to: gaugeFill)
+                .stroke(
+                    AngularGradient(
+                        colors: [
+                            Theme.Colors.iconBlue300,
+                            Theme.Colors.iconBlue400,
+                            Theme.Colors.iconBlue500,
+                            Theme.Colors.iconBlue400
+                        ],
+                        center: .center,
+                        startAngle: .degrees(-90),
+                        endAngle: .degrees(270)
+                    ),
+                    style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
+                )
+                .rotationEffect(.degrees(-90))
+                .frame(width: ringOuterDiameter, height: ringOuterDiameter)
+
+            // One-shot punch when gauge tops out
+            Circle()
+                .stroke(Theme.Colors.iconBlue400.opacity(ringPulse ? 0 : 0.55), lineWidth: 4)
+                .frame(width: ringOuterDiameter, height: ringOuterDiameter)
+                .scaleEffect(ringPulse ? 1.18 : 1.0)
+                .animation(.easeOut(duration: 0.6), value: ringPulse)
+
+            // Giant score number inside the ring
+            Text("\(scoreAnimated)")
+                .font(.custom("PlusJakartaSans-ExtraBold", size: 180))
+                .foregroundStyle(darkScoreColor)
+                .contentTransition(.numericText())
+                .minimumScaleFactor(0.5)
+                .lineLimit(1)
+                .frame(width: ringOuterDiameter - ringThickness * 2)
+        }
+        .shadow(color: Theme.Colors.iconBlue500.opacity(0.22), radius: 24, x: 0, y: 10)
+        .frame(width: ringOuterDiameter, height: ringOuterDiameter)
+        .frame(maxWidth: .infinity)
+    }
+
+    // MARK: - Reveal sequence
+
+    private func runRevealSequence() {
+        // Reset
+        gaugeFill = 0
+        scoreAnimated = 0
+        ringPulse = false
+        showSupporting = false
+
+        let fillDuration: Double = 0.8
+
+        // Fill gauge to score/100
+        withAnimation(.easeOut(duration: fillDuration)) {
+            gaugeFill = CGFloat(percentileScore) / 100.0
+        }
+
+        // Count-up score in parallel with the fill
+        animateScore(duration: fillDuration)
+
+        // When gauge tops out: pulse + confetti + supporting content
+        DispatchQueue.main.asyncAfter(deadline: .now() + fillDuration) {
+            ringPulse = true
+            confettiStart = Date()
+            Theme.Haptics.success()
+
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
+                showSupporting = true
             }
-            // Animate the score counting up
-            animateScore()
         }
     }
 
-    private func animateScore() {
+    private func animateScore(duration: Double) {
         let target = percentileScore
-        let duration: Double = 1.0
-        let steps = 30
-        let stepDuration = duration / Double(steps)
-
-        for step in 0...steps {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(step) * stepDuration) {
-                withAnimation(.easeOut(duration: 0.05)) {
-                    scoreAnimated = Int(Double(target) * Double(step) / Double(steps))
+        let steps = 25
+        let interval = duration / Double(steps)
+        for i in 0...steps {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * interval) {
+                withAnimation(.easeOut(duration: interval)) {
+                    scoreAnimated = Int(Double(target) * Double(i) / Double(steps))
                 }
             }
         }
     }
+}
 
+// MARK: - Confetti Burst
+
+/// One-shot confetti explosion driven by a TimelineView(.animation).
+/// Spawns 70 particles at the ring center (top-third of screen) that explode
+/// outward, fall under gravity, and fade over ~1.6s. Restarts whenever
+/// `startDate` changes (i.e. when a new analysis lands).
+private struct ConfettiBurstView: View {
+    let startDate: Date?
+
+    private static let particleCount = 70
+    private static let lifetime: Double = 1.6
+
+    // Pre-generated particle params (stable across re-renders for a given start).
+    private let particles: [ConfettiParticle] = (0..<ConfettiBurstView.particleCount).map { _ in
+        ConfettiParticle.random()
+    }
+
+    var body: some View {
+        GeometryReader { proxy in
+            if let start = startDate {
+                TimelineView(.animation) { context in
+                    let elapsed = context.date.timeIntervalSince(start)
+                    if elapsed >= 0 && elapsed <= Self.lifetime {
+                        Canvas { ctx, size in
+                            // Burst origin: matches gauge ring center placement.
+                            // Top bar (44pt) + topPad (16pt) + hero topPad (24pt) + ring radius (150)
+                            // — approximate to top quarter of the screen.
+                            let origin = CGPoint(x: size.width / 2, y: size.height * 0.30)
+                            let t = elapsed
+                            let g: Double = 900   // gravity px/s^2
+
+                            for p in particles {
+                                // Position = origin + v0*t + 0.5*g*t^2
+                                let dx = p.vx * t
+                                let dy = p.vy * t + 0.5 * g * t * t
+                                let x = origin.x + dx
+                                let y = origin.y + dy
+
+                                // Fade in fast, fade out toward the end.
+                                let lifeFrac = t / Self.lifetime
+                                let alpha = max(0, 1 - pow(lifeFrac, 2.2))
+
+                                let r = p.radius
+                                let rect = CGRect(x: x - r, y: y - r, width: r * 2, height: r * 2)
+                                var color = p.color
+                                color = color.opacity(alpha)
+                                ctx.fill(Path(ellipseIn: rect), with: .color(color))
+                            }
+                        }
+                    } else {
+                        Color.clear
+                    }
+                }
+                .id(start)   // restart timeline when start changes
+            } else {
+                Color.clear
+            }
+        }
+    }
+}
+
+private struct ConfettiParticle {
+    let vx: Double      // initial horizontal velocity (px/s)
+    let vy: Double      // initial vertical velocity (px/s) — negative = up
+    let radius: CGFloat
+    let color: Color
+
+    static func random() -> ConfettiParticle {
+        // Random direction across full 360°, biased slightly upward so gravity
+        // gives a nice arc.
+        let angle = Double.random(in: 0..<(2 * .pi))
+        let speed = Double.random(in: 280...620)
+        let vx = cos(angle) * speed
+        // Bias upward: subtract a bit so even "down" particles get some lift.
+        let vy = sin(angle) * speed - Double.random(in: 80...220)
+
+        let palette: [Color] = [
+            Theme.Colors.good,
+            Theme.Colors.iconBlue400,
+            Theme.Colors.amber,
+            Theme.Colors.peach,
+            Theme.Colors.lavender,
+            Theme.Colors.mint
+        ]
+
+        return ConfettiParticle(
+            vx: vx,
+            vy: vy,
+            radius: CGFloat.random(in: 3...6),
+            color: palette.randomElement() ?? Theme.Colors.iconBlue400
+        )
+    }
 }
 
 // MARK: - Score Metric Pill
@@ -1003,7 +1139,7 @@ struct ScoreMetricPill: View {
         VStack(spacing: 4) {
             HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(color)
 
                 Text(value)
@@ -1019,9 +1155,8 @@ struct ScoreMetricPill: View {
         }
         .padding(.horizontal, Theme.Spacing.sm + 4)
         .padding(.vertical, Theme.Spacing.sm)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous))
-        .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
+        .frame(maxWidth: .infinity)
+        .glassSurface(radius: Theme.Radius.small)
     }
 }
 

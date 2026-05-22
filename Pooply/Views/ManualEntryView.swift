@@ -2,7 +2,7 @@
 //  ManualEntryView.swift
 //  Pooply
 //
-//  Manual Log Entry
+//  Manual Log Entry — v4 mesh + glass cards. Sleek vertical grid for Bristol types.
 //
 
 import SwiftUI
@@ -20,214 +20,208 @@ struct ManualEntryView: View {
     @State private var selectedDate = Date()
 
     private let allTypes: [Log.PoopType] = Log.PoopType.allCases
-
     private let allColors: [Log.PoopColor] = [
         .lightBrown, .mediumBrown, .darkBrown, .green, .yellow, .black, .red
     ]
-
-    private let allSizes: [Log.PoopSize] = [
-        .small, .medium, .large
-    ]
+    private let allSizes: [Log.PoopSize] = [.small, .medium, .large]
 
     var body: some View {
-        NavigationStack {
-            ScrollView {
-                VStack(spacing: Theme.Spacing.lg) {
+        ZStack(alignment: .bottom) {
+            FrostedSheetBackground()
+                .ignoresSafeArea()
 
-                    // MARK: - When
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                            EntrySectionLabel(text: "When", icon: "clock.fill")
+            VStack(spacing: 0) {
 
-                            HStack(spacing: Theme.Spacing.sm) {
-                                EntryPillButton(title: "Now", icon: "clock.fill", isSelected: useCurrentTime) {
-                                    withAnimation(Theme.Animation.snap) { useCurrentTime = true }
-                                }
-                                EntryPillButton(title: "Custom", icon: "calendar", isSelected: !useCurrentTime) {
-                                    withAnimation(Theme.Animation.snap) { useCurrentTime = false }
-                                }
-                            }
-
-                            if !useCurrentTime {
-                                DatePicker(
-                                    "Select Date",
-                                    selection: $selectedDate,
-                                    displayedComponents: [.date, .hourAndMinute]
-                                )
-                                .datePickerStyle(.compact)
-                                .tint(Theme.Colors.primary)
-                                .labelsHidden()
-                                .padding(Theme.Spacing.sm)
-                                .frame(maxWidth: .infinity, alignment: .center)
-                                .background(Theme.Colors.backgroundSecondary)
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous))
-                                .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                            }
-                        }
-                        .animation(Theme.Animation.spring, value: useCurrentTime)
+                // MARK: - Header
+                HStack {
+                    Button {
+                        Theme.Haptics.light()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(.white)
+                            .frame(width: 36, height: 36)
+                            .background(Circle().fill(Theme.Colors.neutral900))
                     }
 
-                    // MARK: - Type
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                            EntrySectionLabel(text: "Type", icon: "list.bullet")
+                    Spacer()
 
-                            LazyVGrid(columns: [
-                                GridItem(.flexible(), spacing: 10),
-                                GridItem(.flexible(), spacing: 10),
-                                GridItem(.flexible(), spacing: 10)
-                            ], spacing: 10) {
+                    Text("New Log")
+                        .font(Theme.Fonts.title(20))
+                        .foregroundStyle(Theme.Colors.textOnGlass)
+
+                    Spacer()
+
+                    Color.clear.frame(width: 36, height: 36)
+                }
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+
+                // MARK: - Content
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 18) {
+
+                        // Type — 2-column grid of all 7 Bristol cards
+                        EntryGlassSection(title: "What type?", icon: "list.bullet") {
+                            LazyVGrid(
+                                columns: [
+                                    GridItem(.flexible(), spacing: 10),
+                                    GridItem(.flexible(), spacing: 10)
+                                ],
+                                spacing: 10
+                            ) {
                                 ForEach(allTypes, id: \.self) { type in
-                                    EntryTypeGridItem(
+                                    BristolTypeCard(
                                         type: type,
                                         isSelected: selectedType == type,
                                         action: {
                                             withAnimation(Theme.Animation.snap) {
                                                 selectedType = type
                                             }
+                                            Theme.Haptics.light()
                                         }
                                     )
                                 }
                             }
                         }
-                    }
 
-                    // MARK: - Color
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                            EntrySectionLabel(text: "Color", icon: "paintpalette.fill")
-
+                        // Color
+                        EntryGlassSection(title: "What color?", icon: "paintpalette") {
                             HStack(spacing: 0) {
                                 ForEach(allColors, id: \.self) { color in
-                                    EntryColorSwatch(
+                                    ColorSwatch(
                                         poopColor: color,
                                         isSelected: selectedColor == color,
                                         action: {
                                             withAnimation(Theme.Animation.snap) {
                                                 selectedColor = color
                                             }
+                                            Theme.Haptics.light()
                                         }
                                     )
                                     .frame(maxWidth: .infinity)
                                 }
                             }
-
                             Text(colorLabel(for: selectedColor))
-                                .font(Theme.Fonts.caption())
-                                .foregroundStyle(Theme.Colors.textSecondary)
+                                .font(Theme.Fonts.captionBold(13))
+                                .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.65))
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .contentTransition(.numericText())
+                                .padding(.top, 4)
                         }
-                    }
 
-                    // MARK: - Size
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
-                            EntrySectionLabel(text: "Size", icon: "circle.lefthalf.filled")
-
-                            HStack(spacing: Theme.Spacing.sm) {
+                        // Size
+                        EntryGlassSection(title: "What size?", icon: "circle.lefthalf.filled") {
+                            HStack(spacing: 8) {
                                 ForEach(allSizes, id: \.self) { size in
-                                    EntrySizeOptionButton(
+                                    SizeTile(
                                         size: size,
                                         isSelected: selectedSize == size,
                                         action: {
                                             withAnimation(Theme.Animation.snap) {
                                                 selectedSize = size
                                             }
+                                            Theme.Haptics.light()
                                         }
                                     )
                                 }
                             }
                         }
-                    }
 
-                    // MARK: - Blood
-                    SectionCard {
-                        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+                        // Blood
+                        EntryGlassSection(title: "Blood present?", icon: "drop.fill", iconColor: Theme.Colors.coral) {
                             HStack {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    HStack(spacing: 6) {
-                                        Image(systemName: "drop.fill")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundStyle(Theme.Colors.blood)
-                                        Text("Blood Present")
-                                            .font(Theme.Fonts.bodyBold())
-                                            .foregroundStyle(Theme.Colors.textPrimary)
-                                    }
-
-                                    Text("Toggle if you noticed any blood")
-                                        .font(Theme.Fonts.caption())
-                                        .foregroundStyle(Theme.Colors.textTertiary)
-                                }
-
+                                Text("Toggle if you noticed any blood")
+                                    .font(Theme.Fonts.caption(13))
+                                    .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.6))
                                 Spacer()
-
                                 Toggle("", isOn: $containsBlood)
                                     .labelsHidden()
-                                    .toggleStyle(SwitchToggleStyle(tint: Theme.Colors.blood))
+                                    .toggleStyle(SwitchToggleStyle(tint: Theme.Colors.coral))
                                     .onChange(of: containsBlood) { _, newValue in
-                                        if newValue {
-                                            let impact = UIImpactFeedbackGenerator(style: .medium)
-                                            impact.impactOccurred()
-                                        }
+                                        if newValue { Theme.Haptics.medium() }
                                     }
                             }
 
                             if containsBlood {
-                                HStack(alignment: .top, spacing: Theme.Spacing.sm) {
+                                HStack(alignment: .top, spacing: 8) {
                                     Image(systemName: "exclamationmark.triangle.fill")
-                                        .font(.system(size: 14))
-                                        .foregroundStyle(Theme.Colors.blood)
-
-                                    Text("Blood in stool can indicate various conditions. If frequent, please consult a healthcare professional.")
-                                        .font(Theme.Fonts.caption())
-                                        .foregroundStyle(Theme.Colors.textSecondary)
+                                        .font(.system(size: 12))
+                                        .foregroundStyle(Theme.Colors.coral)
+                                    Text("If blood persists, consult a healthcare professional.")
+                                        .font(Theme.Fonts.caption(12))
+                                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.7))
                                         .fixedSize(horizontal: false, vertical: true)
                                 }
-                                .padding(Theme.Spacing.md)
-                                .background(Theme.Colors.blood.opacity(0.08))
-                                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous))
+                                .padding(10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                        .fill(Theme.Colors.coral.opacity(0.10))
+                                )
                                 .transition(.opacity.combined(with: .scale(scale: 0.95)))
                             }
                         }
-                        .animation(Theme.Animation.spring, value: containsBlood)
-                    }
 
-                    // Bottom spacing for safe area
-                    Spacer().frame(height: Theme.Spacing.xl)
-                }
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.top, Theme.Spacing.sm)
-            }
-            .background(Theme.Colors.background)
-            .navigationTitle("Log Entry")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(Theme.Colors.background, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(action: { dismiss() }) {
-                        Text("Cancel")
-                            .font(Theme.Fonts.body())
-                            .foregroundStyle(Theme.Colors.textSecondary)
+                        // When (moved to bottom — set time last)
+                        EntryGlassSection(title: "When", icon: "clock") {
+                            HStack(spacing: 8) {
+                                TimePillButton(title: "Now", icon: "clock.fill", isSelected: useCurrentTime) {
+                                    withAnimation(Theme.Animation.snap) { useCurrentTime = true }
+                                }
+                                TimePillButton(title: "Earlier", icon: "calendar", isSelected: !useCurrentTime) {
+                                    withAnimation(Theme.Animation.snap) { useCurrentTime = false }
+                                }
+                            }
+                            if !useCurrentTime {
+                                DatePicker("", selection: $selectedDate, displayedComponents: [.date, .hourAndMinute])
+                                    .datePickerStyle(.compact)
+                                    .tint(Theme.Colors.neutral900)
+                                    .labelsHidden()
+                                    .environment(\.font, Theme.Fonts.captionBold(14))
+                                    .accentColor(Theme.Colors.neutral900)
+                                    .padding(.top, 8)
+                                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                            }
+                        }
+
+                        // Bottom padding so content can scroll past the floating button
+                        Spacer().frame(height: 140)
                     }
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
                 }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button(action: saveLog) {
-                        Text("Save")
+            }
+
+            // MARK: - Floating Log It button with fade mask above
+            VStack(spacing: 0) {
+                // Soft fade so content scrolls under and fades out, hinting more to see
+                LinearGradient(
+                    colors: [Color.white.opacity(0.0), Color.white.opacity(0.55)],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .frame(height: 36)
+                .allowsHitTesting(false)
+
+                Button(action: saveLog) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 16, weight: .bold))
+                        Text("Log It")
                             .font(Theme.Fonts.bodyBold())
-                            .foregroundStyle(Theme.Colors.textOnPrimary)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
-                            .background(Theme.Colors.primary)
-                            .clipShape(Capsule())
                     }
                 }
+                .elevatedButtonStyle(color: Theme.Colors.neutral900, height: 56)
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                .padding(.bottom, 24)
+                .background(Color.white.opacity(0.55))
             }
-            .tint(Theme.Colors.primary)
         }
+        .animation(Theme.Animation.spring, value: containsBlood)
+        .animation(Theme.Animation.spring, value: useCurrentTime)
     }
-
-    // MARK: - Helpers
 
     private func colorLabel(for poopColor: Log.PoopColor) -> String {
         switch poopColor {
@@ -242,11 +236,8 @@ struct ManualEntryView: View {
     }
 
     private func saveLog() {
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
-
+        Theme.Haptics.success()
         let timestamp = useCurrentTime ? Date() : selectedDate
-
         let newLog = userViewModel.createManualLog(
             type: selectedType,
             color: selectedColor,
@@ -254,55 +245,41 @@ struct ManualEntryView: View {
             containsBlood: containsBlood,
             timestamp: timestamp
         )
-
         userViewModel.addLog(newLog)
         Task { try? await FirebaseService.shared.saveLog(newLog) }
-
         dismiss()
     }
 }
 
-// MARK: - Section Card Container
+// MARK: - Entry Glass Section
 
-private struct SectionCard<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-
-    var body: some View {
-        content
-            .padding(Theme.Spacing.cardPadding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.Colors.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.large, style: .continuous))
-            .cardShadow()
-    }
-}
-
-// MARK: - Section Label with Icon
-
-private struct EntrySectionLabel: View {
-    let text: String
+private struct EntryGlassSection<Content: View>: View {
+    let title: String
     let icon: String
+    var iconColor: Color = Theme.Colors.textOnGlass.opacity(0.6)
+    @ViewBuilder let content: Content
 
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Theme.Colors.primary)
-            Text(text)
-                .font(Theme.Fonts.subheading())
-                .foregroundStyle(Theme.Colors.textPrimary)
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(iconColor)
+                Text(title)
+                    .font(Theme.Fonts.subheading(16))
+                    .foregroundStyle(Theme.Colors.textOnGlass)
+            }
+            content
         }
-        .padding(.bottom, 4)
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassSurface(radius: 20)
     }
 }
 
-// MARK: - Pill Button
+// MARK: - Time Pill Button
 
-private struct EntryPillButton: View {
+private struct TimePillButton: View {
     let title: String
     let icon: String
     let isSelected: Bool
@@ -310,29 +287,36 @@ private struct EntryPillButton: View {
 
     var body: some View {
         Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
+            Theme.Haptics.light()
             action()
         }) {
-            HStack(spacing: Theme.Spacing.sm) {
+            HStack(spacing: 6) {
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 13, weight: .bold))
                 Text(title)
-                    .font(Theme.Fonts.bodyBold())
+                    .font(Theme.Fonts.captionBold(14))
             }
-            .foregroundStyle(isSelected ? Theme.Colors.textOnPrimary : Theme.Colors.textSecondary)
+            .foregroundStyle(isSelected ? .white : Theme.Colors.textOnGlass.opacity(0.6))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(isSelected ? Theme.Colors.primary : Theme.Colors.backgroundSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
+            .frame(height: 42)
+            .background(
+                Group {
+                    if isSelected {
+                        Capsule().fill(Theme.Colors.neutral900)
+                    } else {
+                        Capsule().fill(Color.white.opacity(0.6))
+                            .overlay(Capsule().stroke(Color.white.opacity(0.8), lineWidth: 1))
+                    }
+                }
+            )
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Type Grid Item
+// MARK: - Bristol Type Card (2-column grid item)
 
-private struct EntryTypeGridItem: View {
+private struct BristolTypeCard: View {
     let type: Log.PoopType
     let isSelected: Bool
     let action: () -> Void
@@ -361,42 +345,51 @@ private struct EntryTypeGridItem: View {
         }
     }
 
+    private var categoryColor: Color {
+        switch type {
+        case .separateHardLumps, .lumpySausage: return Theme.Colors.hard
+        case .crackedSausage, .smoothSausage, .softBlobs: return Theme.Colors.good
+        case .fluffyPieces, .watery: return Theme.Colors.loose
+        }
+    }
+
     var body: some View {
-        Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
-            action()
-        }) {
-            VStack(spacing: 6) {
+        Button(action: action) {
+            HStack(spacing: 12) {
                 ZStack(alignment: .topTrailing) {
                     Image(type.rawValue)
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 50, height: 50)
+                        .frame(width: 44, height: 44)
 
                     Text("\(typeNumber)")
-                        .font(Theme.Fonts.micro())
-                        .foregroundStyle(Theme.Colors.textTertiary)
-                        .frame(width: 18, height: 18)
-                        .background(Theme.Colors.backgroundSecondary)
-                        .clipShape(Circle())
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.6))
+                        .frame(width: 16, height: 16)
+                        .background(Circle().fill(Color.white))
                         .offset(x: 4, y: -4)
                 }
 
                 Text(typeLabel)
-                    .font(Theme.Fonts.caption())
-                    .foregroundStyle(isSelected ? Theme.Colors.primary : Theme.Colors.textSecondary)
+                    .font(Theme.Fonts.captionBold(13))
+                    .foregroundStyle(Theme.Colors.textOnGlass)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+
+                Spacer(minLength: 0)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .padding(.horizontal, 8)
-            .background(isSelected ? Theme.Colors.primary.opacity(0.12) : Theme.Colors.backgroundSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
-                    .stroke(isSelected ? Theme.Colors.primary : Color.clear, lineWidth: 2)
+            .padding(10)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(isSelected ? categoryColor.opacity(0.20) : Color.white.opacity(0.55))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(isSelected ? categoryColor : Color.white.opacity(0.9), lineWidth: isSelected ? 2 : 1)
+            )
+            .scaleEffect(isSelected ? 1.02 : 1.0)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
@@ -404,7 +397,7 @@ private struct EntryTypeGridItem: View {
 
 // MARK: - Color Swatch
 
-private struct EntryColorSwatch: View {
+private struct ColorSwatch: View {
     let poopColor: Log.PoopColor
     let isSelected: Bool
     let action: () -> Void
@@ -422,79 +415,73 @@ private struct EntryColorSwatch: View {
     }
 
     var body: some View {
-        Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
-            action()
-        }) {
-            Circle()
-                .fill(swatchColor)
-                .frame(width: 36, height: 36)
-                .overlay(
+        Button(action: action) {
+            ZStack {
+                if isSelected {
                     Circle()
-                        .stroke(Color.white, lineWidth: isSelected ? 2.5 : 0)
-                )
-                .overlay(
-                    Circle()
-                        .stroke(isSelected ? Theme.Colors.primary : Theme.Colors.neutralLight.opacity(0.5), lineWidth: isSelected ? 2.5 : 1)
-                        .padding(isSelected ? -1 : 0)
-                )
-                .scaleEffect(isSelected ? 1.08 : 1.0)
+                        .stroke(swatchColor.opacity(0.6), lineWidth: 2)
+                        .frame(width: 38, height: 38)
+                }
+                Circle()
+                    .fill(swatchColor)
+                    .frame(width: isSelected ? 28 : 26, height: isSelected ? 28 : 26)
+            }
+            .frame(height: 44)
+            .contentShape(Rectangle())
+            .animation(Theme.Animation.snap, value: isSelected)
         }
         .buttonStyle(.plain)
     }
 }
 
-// MARK: - Size Option Button
+// MARK: - Size Tile
 
-private struct EntrySizeOptionButton: View {
+private struct SizeTile: View {
     let size: Log.PoopSize
     let isSelected: Bool
     let action: () -> Void
 
-    private var iconSize: CGFloat {
+    private var dotSize: CGFloat {
         switch size {
         case .small: return 12
         case .medium: return 18
-        case .large: return 24
+        case .large: return 26
         }
     }
 
     var body: some View {
-        Button(action: {
-            let impact = UIImpactFeedbackGenerator(style: .light)
-            impact.impactOccurred()
-            action()
-        }) {
+        Button(action: action) {
             VStack(spacing: 8) {
                 Circle()
-                    .fill(isSelected ? Theme.Colors.primary : Theme.Colors.neutralLight)
-                    .frame(width: iconSize, height: iconSize)
+                    .fill(isSelected ? Theme.Colors.textOnGlass : Theme.Colors.textOnGlass.opacity(0.35))
+                    .frame(width: dotSize, height: dotSize)
+                    .frame(height: 30)
 
                 Text(size.rawValue.capitalized)
-                    .font(Theme.Fonts.bodyBold())
+                    .font(Theme.Fonts.captionBold(13))
+                    .foregroundStyle(isSelected ? Theme.Colors.textOnGlass : Theme.Colors.textOnGlass.opacity(0.55))
             }
-            .foregroundStyle(isSelected ? Theme.Colors.primary : Theme.Colors.textSecondary)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 16)
-            .background(isSelected ? Theme.Colors.primary.opacity(0.12) : Theme.Colors.backgroundSecondary)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
-                    .stroke(isSelected ? Theme.Colors.primary : Color.clear, lineWidth: 2)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .fill(isSelected ? Color.white.opacity(0.7) : Color.white.opacity(0.35))
             )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(Color.white.opacity(isSelected ? 0.95 : 0.7), lineWidth: isSelected ? 1.5 : 1)
+            )
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 }
-
-// MARK: - Preview
 
 #Preview {
     ManualEntryView(isPresented: .constant(true))
         .environmentObject(
             UserViewModel(
-                user: User(name: "Jessica", age: 25, weight: 160, gender: "female"),
+                user: User(name: "Brandon", age: 25, weight: 160, gender: "male"),
                 withDummyData: true
             )
         )

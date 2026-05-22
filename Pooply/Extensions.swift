@@ -9,68 +9,47 @@ import Foundation
 import SwiftUI
 import UIKit
 
-// MARK: - Design System Colors
+// MARK: - Legacy Design System Aliases (bridge to Theme)
 
 struct AppColors {
-    // Backgrounds
-    static let background = Color(hex: "#F1F5EC")
-    static let backgroundSecondary = Color(hex: "#F8FAF9")
-    static let cardBackground = Color.white
+    static let background = Theme.Colors.background
+    static let backgroundSecondary = Theme.Colors.backgroundSecondary
+    static let cardBackground = Theme.Colors.cardBackground
 
-    // Brand Colors
-    static let primary = Color(hex: "#19B888")        // Pooply Teal
-    static let secondary = Color(hex: "#2E7D32")      // Forest Green
-    static let accent = Color(hex: "#1B5E20")         // Dark Forest
+    static let primary = Theme.Colors.primary
+    static let secondary = Theme.Colors.skyBlue600
+    static let accent = Theme.Colors.skyBlue700
 
-    // Category Colors
-    static let regular = Color(hex: "#19B888")        // Teal - Good
-    static let hard = Color(hex: "#FF7A33")           // Warm Amber
-    static let loose = Color(hex: "#008CFF")          // Sky Blue
-    static let bloodAlert = Color(hex: "#E53935")     // Red
+    static let regular = Theme.Colors.good
+    static let hard = Theme.Colors.hard
+    static let loose = Theme.Colors.loose
+    static let bloodAlert = Theme.Colors.blood
 
-    // Supporting Colors
-    static let hydration = Color(hex: "#4FC3F7")      // Light Blue
-    static let fiber = Color(hex: "#FFB74D")          // Warm Yellow
-    static let warning = Color(hex: "#FFA726")        // Orange
-    static let neutral = Color(hex: "#78909C")        // Gray
+    static let hydration = Theme.Colors.hydration
+    static let fiber = Theme.Colors.fiber
+    static let warning = Theme.Colors.warning
+    static let neutral = Theme.Colors.neutral
 
-    // Card Accent Tints
-    static let tealTint = Color(hex: "#E8F5F1")
-    static let blueTint = Color(hex: "#E3F2FD")
-    static let amberTint = Color(hex: "#FFF3E0")
-    static let pinkTint = Color(hex: "#FCE4EC")
+    static let tealTint = Theme.Colors.tealTint
+    static let blueTint = Theme.Colors.blueTint
+    static let amberTint = Theme.Colors.amberTint
+    static let pinkTint = Theme.Colors.pinkTint
 
-    // Text Colors
-    static let textPrimary = Color(hex: "#1B5E20")
-    static let textSecondary = Color(hex: "#2E7D32")
-    static let textTertiary = Color(hex: "#78909C")
+    static let textPrimary = Theme.Colors.textPrimary
+    static let textSecondary = Theme.Colors.textSecondary
+    static let textTertiary = Theme.Colors.textTertiary
 
-    // Legacy (for gradual migration)
-    static let legacyMint = Color(hex: "#cff1e5")
-    static let legacyLightMint = Color(hex: "#e5fff7")
+    static let legacyMint = Theme.Colors.mint
+    static let legacyLightMint = Theme.Colors.skyBlue50
 }
 
-// MARK: - Design System Typography
-
 struct AppFonts {
-    static func hero(_ size: CGFloat = 48) -> Font {
-        .custom("Nunito-Black", size: size)
-    }
-    static func title(_ size: CGFloat = 28) -> Font {
-        .custom("Nunito-Bold", size: size)
-    }
-    static func heading(_ size: CGFloat = 20) -> Font {
-        .custom("Nunito-Bold", size: size)
-    }
-    static func body(_ size: CGFloat = 16) -> Font {
-        .custom("Nunito-Regular", size: size)
-    }
-    static func caption(_ size: CGFloat = 14) -> Font {
-        .custom("Nunito-Regular", size: size)
-    }
-    static func label(_ size: CGFloat = 12) -> Font {
-        .custom("Nunito-Bold", size: size)
-    }
+    static func hero(_ size: CGFloat = 48) -> Font { Theme.Fonts.hero(size) }
+    static func title(_ size: CGFloat = 28) -> Font { Theme.Fonts.title(size) }
+    static func heading(_ size: CGFloat = 20) -> Font { Theme.Fonts.heading(size) }
+    static func body(_ size: CGFloat = 16) -> Font { Theme.Fonts.body(size) }
+    static func caption(_ size: CGFloat = 14) -> Font { Theme.Fonts.caption(size) }
+    static func label(_ size: CGFloat = 12) -> Font { Theme.Fonts.label(size) }
 }
 
 // MARK: - Color Extension
@@ -91,18 +70,20 @@ extension Color {
 // MARK: - View Extensions
 
 extension View {
-    // Standard card shadow — compositingGroup reduces offscreen render passes
+    // Standard card shadow — optimized for light warm gray bg
     func cardShadow() -> some View {
         self
             .compositingGroup()
-            .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 6)
+            .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 4)
+            .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 1)
     }
 
-    // Floating element shadow (tab bar, FAB)
+    // Floating element shadow (tab bar)
     func floatingShadow() -> some View {
         self
             .compositingGroup()
-            .shadow(color: Color.black.opacity(0.1), radius: 16, x: 0, y: 8)
+            .shadow(color: Color.black.opacity(0.1), radius: 20, x: 0, y: 8)
+            .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
     }
 
     // Subtle shadow for inner cards

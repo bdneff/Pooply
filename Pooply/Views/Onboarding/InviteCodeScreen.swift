@@ -29,7 +29,7 @@ struct InviteCodeContent: View {
                     state.back()
                 }) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .semibold))
+                        .font(.system(size: 18, weight: .bold))
                         .foregroundStyle(Theme.Colors.textSecondary)
                         .frame(width: 44, height: 44)
                 }
@@ -99,7 +99,7 @@ struct InviteCodeContent: View {
                     if let error = errorMessage {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 14, weight: .bold))
                             Text(error)
                                 .font(Theme.Fonts.caption())
                         }
@@ -110,7 +110,7 @@ struct InviteCodeContent: View {
                     if let success = successMessage {
                         HStack(spacing: Theme.Spacing.xs) {
                             Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 14, weight: .semibold))
+                                .font(.system(size: 14, weight: .bold))
                                 .scaleEffect(successIconScale)
                             Text(success)
                                 .font(Theme.Fonts.caption())

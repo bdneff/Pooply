@@ -9,12 +9,17 @@
 	<key>NSUserTrackingUsageDescription</key>
 	<string>This helps us understand which content brought you to Pooply and improve your experience.</string>
 	<key>UIUserInterfaceStyle</key>
-	<string>Light</string>
+	<string>Dark</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Nunito-Regular.ttf</string>
 		<string>Nunito-Bold.ttf</string>
 		<string>Nunito-Black.ttf</string>
+		<string>PlusJakartaSans-Regular.ttf</string>
+		<string>PlusJakartaSans-Medium.ttf</string>
+		<string>PlusJakartaSans-SemiBold.ttf</string>
+		<string>PlusJakartaSans-Bold.ttf</string>
+		<string>PlusJakartaSans-ExtraBold.ttf</string>
 	</array>
 </dict>
 </plist>
