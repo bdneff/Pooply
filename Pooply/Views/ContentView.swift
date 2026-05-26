@@ -2,8 +2,8 @@
 //  ContentView.swift
 //  Pooply
 //
-//  v4 — Mesh bg, glass pill nav bottom-left, glass + FAB bottom-right.
-//  Home / Insights swap inline. Profile opens from mascot tap.
+//  v5 — Tiimo-minimal: cream surface, 3 tabs (Home / Trends / Coach),
+//  floating frosted glass nav pill + black FAB at the bottom.
 //
 
 import SwiftUI
@@ -51,45 +51,39 @@ struct ContentView: View {
     @State private var showProfile: Bool = false
     @State private var showLogOptions: Bool = false
     @State private var showRatingCard: Bool = false
-    @State private var homeTimeframe: String = "WEEK"
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Group {
-                switch selectedPage {
-                case .home:
-                    MeshBackground()
-                case .insights:
-                    InsightsBackground()
-                }
-            }
-            .animation(.easeInOut(duration: 0.35), value: selectedPage)
+            CreamBackground()
 
             Group {
                 switch selectedPage {
                 case .home:
                     HomeView(
-                        selectedTimeframe: $homeTimeframe,
                         showProfile: $showProfile,
                         showLogOptions: $showLogOptions
                     )
                     .transition(.opacity.combined(with: .scale(scale: 0.98)))
 
-                case .insights:
+                case .trends:
                     InsightsView(showProfile: $showProfile)
                         .environmentObject(userViewModel)
                         .environmentObject(subscriptionService)
                         .transition(.opacity.combined(with: .scale(scale: 0.98)))
+
+                // Chat (Coach Lee) hidden for beta — see AppPage in DesignSystem.swift.
+                // case .coach:
+                //     CoachView(showProfile: $showProfile)
+                //         .transition(.opacity.combined(with: .scale(scale: 0.98)))
                 }
             }
             .animation(.spring(response: 0.35, dampingFraction: 0.82), value: selectedPage)
 
+            // MARK: - Floating tab bar + FAB
             HStack(alignment: .center) {
                 GlassNavPill(selected: $selectedPage)
                 Spacer()
-                GlassFAB {
-                    showLogOptions = true
-                }
+                GlassFAB { showLogOptions = true }
             }
             .padding(.horizontal, Theme.Spacing.screenHorizontal)
             .padding(.bottom, 24)
@@ -146,6 +140,47 @@ struct ContentView: View {
     }
 }
 
+// MARK: - Coach (placeholder)
+
+struct CoachView: View {
+    @Binding var showProfile: Bool
+
+    var body: some View {
+        VStack(spacing: 0) {
+            // Header
+            HStack(alignment: .top) {
+                Text("Coach")
+                    .font(Theme.Fonts.title(28))
+                    .foregroundStyle(Theme.Colors.espresso)
+                    .padding(.top, 6)
+                Spacer()
+                MascotAvatar(size: 52) { showProfile = true }
+            }
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+            .padding(.top, 4)
+
+            Spacer()
+
+            VStack(spacing: 18) {
+                Image("appLogo")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 80, height: 80)
+                    .clipShape(Circle())
+                    .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 3)
+
+                Text("Coach Lee is coming soon.")
+                    .font(Theme.Fonts.title(22))
+                    .foregroundStyle(Theme.Colors.espresso)
+                    .multilineTextAlignment(.center)
+            }
+
+            Spacer()
+            Spacer().frame(height: 120)
+        }
+    }
+}
+
 // MARK: - KPI Item (legacy)
 
 struct KPIItem: View {
@@ -158,19 +193,19 @@ struct KPIItem: View {
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(value)
                     .font(Theme.Fonts.metric(28))
-                    .foregroundStyle(Theme.Colors.textOnGlass)
+                    .foregroundStyle(Theme.Colors.espresso)
                     .contentTransition(.numericText())
 
                 if !unit.isEmpty {
                     Text(unit)
                         .font(Theme.Fonts.caption())
-                        .foregroundStyle(Theme.Colors.textTertiary)
+                        .foregroundStyle(Theme.Colors.espressoLight)
                 }
             }
 
             Text(label)
                 .font(Theme.Fonts.caption())
-                .foregroundStyle(Theme.Colors.textSecondary)
+                .foregroundStyle(Theme.Colors.espressoMid)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -205,12 +240,12 @@ struct MiniGaugeKPI: View {
 
             Text("\(value)%")
                 .font(Theme.Fonts.bodyBold())
-                .foregroundStyle(Theme.Colors.textOnGlass)
+                .foregroundStyle(Theme.Colors.espresso)
                 .contentTransition(.numericText())
 
             Text(label)
                 .font(Theme.Fonts.micro())
-                .foregroundStyle(Theme.Colors.textTertiary)
+                .foregroundStyle(Theme.Colors.espressoLight)
         }
         .frame(maxWidth: .infinity)
     }
@@ -230,10 +265,10 @@ struct LogOptionsSheet: View {
                 VStack(spacing: 4) {
                     Text("How are we logging?")
                         .font(Theme.Fonts.title(24))
-                        .foregroundStyle(Theme.Colors.textOnGlass)
+                        .foregroundStyle(Theme.Colors.espresso)
                     Text("Pick your method")
                         .font(Theme.Fonts.body(14))
-                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.6))
+                        .foregroundStyle(Theme.Colors.espressoMid)
                 }
                 .padding(.top, 24)
                 .padding(.bottom, 8)
@@ -290,10 +325,10 @@ struct LogOptionTile: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(Theme.Fonts.heading(20))
-                        .foregroundStyle(Theme.Colors.textOnGlass)
+                        .foregroundStyle(Theme.Colors.espresso)
                     Text(subtitle)
                         .font(Theme.Fonts.caption(13))
-                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.6))
+                        .foregroundStyle(Theme.Colors.espressoMid)
                 }
             }
             .padding(16)

@@ -41,136 +41,101 @@ struct InviteCodeContent: View {
             .padding(.horizontal, Theme.Spacing.screenHorizontal)
             .padding(.vertical, Theme.Spacing.sm)
 
-            ScrollView(.vertical, showsIndicators: false) {
-                VStack(spacing: Theme.Spacing.lg) {
-                    Spacer().frame(height: Theme.Spacing.lg)
+            Spacer()
 
-                    // Mascot icon in concentric circles
-                    ZStack {
-                        MascotCircle(size: 72)
+            // Mascot — tight to title (Welcome-style offset)
+            MascotCircle(size: 110)
+
+            Spacer().frame(height: Theme.Spacing.xs)
+
+            Text("Enter your invite code")
+                .font(Theme.Fonts.title())
+                .foregroundStyle(Theme.Colors.textPrimary)
+                .multilineTextAlignment(.center)
+
+            Spacer().frame(height: Theme.Spacing.lg)
+
+            // Code text field
+            TextField("INVITE CODE", text: $code)
+                .font(Theme.Fonts.body())
+                .foregroundStyle(Theme.Colors.textPrimary)
+                .multilineTextAlignment(.center)
+                .autocapitalization(.allCharacters)
+                .disableAutocorrection(true)
+                .focused($isCodeFieldFocused)
+                .submitLabel(.done)
+                .onSubmit {
+                    if !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        redeemCode()
                     }
-
-                    // Title and subtitle
-                    VStack(spacing: Theme.Spacing.sm) {
-                        Text("Have an Invite Code?")
-                            .font(Theme.Fonts.title())
-                            .foregroundStyle(Theme.Colors.textPrimary)
-                            .multilineTextAlignment(.center)
-
-                        Text("Enter your code to unlock full access\nto Pooply for free")
-                            .font(Theme.Fonts.body())
-                            .foregroundStyle(Theme.Colors.textTertiary)
-                            .multilineTextAlignment(.center)
-                    }
-
-                    Spacer().frame(height: Theme.Spacing.sm)
-
-                    // Code text field
-                    TextField("Enter invite code", text: $code)
-                        .font(Theme.Fonts.body())
-                        .foregroundStyle(Theme.Colors.textPrimary)
-                        .multilineTextAlignment(.center)
-                        .autocapitalization(.allCharacters)
-                        .disableAutocorrection(true)
-                        .focused($isCodeFieldFocused)
-                        .submitLabel(.done)
-                        .onSubmit {
-                            if !code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                                redeemCode()
-                            }
-                        }
-                        .padding(Theme.Spacing.md)
-                        .background(Theme.Colors.backgroundSecondary)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-                        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
-                                .stroke(
-                                    errorMessage != nil ? Theme.Colors.blood.opacity(0.5) :
-                                    successMessage != nil ? Theme.Colors.good.opacity(0.5) :
-                                    Color.clear,
-                                    lineWidth: 1.5
-                                )
+                }
+                .padding(Theme.Spacing.md)
+                .background(Theme.Colors.backgroundSecondary)
+                .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
+                .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
+                        .stroke(
+                            errorMessage != nil ? Theme.Colors.blood.opacity(0.5) :
+                            successMessage != nil ? Theme.Colors.good.opacity(0.5) :
+                            Color.clear,
+                            lineWidth: 1.5
                         )
-                        .offset(x: shakeOffset)
-                        .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-                    // Error / Success message area
-                    if let error = errorMessage {
-                        HStack(spacing: Theme.Spacing.xs) {
-                            Image(systemName: "xmark.circle.fill")
-                                .font(.system(size: 14, weight: .bold))
-                            Text(error)
-                                .font(Theme.Fonts.caption())
-                        }
-                        .foregroundStyle(Theme.Colors.blood)
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                    }
-
-                    if let success = successMessage {
-                        HStack(spacing: Theme.Spacing.xs) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 14, weight: .bold))
-                                .scaleEffect(successIconScale)
-                            Text(success)
-                                .font(Theme.Fonts.caption())
-                        }
-                        .foregroundStyle(Theme.Colors.good)
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
-                    }
-
-                    // Bottom spacer for pinned button
-                    Spacer().frame(height: 120)
-                }
-            }
-
-            // Pinned bottom buttons
-            VStack(spacing: Theme.Spacing.md) {
-                // Fade gradient
-                LinearGradient(
-                    colors: [Theme.Colors.background.opacity(0), Theme.Colors.background],
-                    startPoint: .top,
-                    endPoint: .bottom
                 )
-                .frame(height: 20)
-
-                // Redeem Code button
-                Button(action: redeemCode) {
-                    HStack(spacing: Theme.Spacing.sm) {
-                        if isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.8)
-                        }
-                        Text("Redeem Code")
-                            .font(Theme.Fonts.bodyBold())
-                    }
-                }
-                .elevatedButtonStyle(color:
-                    code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading || successMessage != nil
-                        ? Theme.Colors.neutralLight
-                        : Theme.Colors.primary
-                )
-                .animation(.easeInOut(duration: 0.2), value: code.isEmpty)
-                .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading || successMessage != nil)
+                .offset(x: shakeOffset)
                 .padding(.horizontal, Theme.Spacing.screenHorizontal)
 
-                // Skip button
-                Button(action: {
-                    Analytics.logEvent("onboarding_invite_code_skipped", parameters: nil)
-                    let impact = UIImpactFeedbackGenerator(style: .medium)
-                    impact.impactOccurred()
-                    state.next()
-                }) {
-                    Text("I don't have a code")
-                        .font(Theme.Fonts.captionBold())
-                        .foregroundStyle(Theme.Colors.textTertiary)
+            // Error / Success message area
+            if let error = errorMessage {
+                HStack(spacing: Theme.Spacing.xs) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 14, weight: .bold))
+                    Text(error)
+                        .font(Theme.Fonts.caption())
                 }
-                .disabled(isLoading || successMessage != nil)
-                .padding(.bottom, Theme.Spacing.lg)
-                .background(Theme.Colors.background)
+                .foregroundStyle(Theme.Colors.blood)
+                .padding(.top, Theme.Spacing.sm)
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
+
+            if let success = successMessage {
+                HStack(spacing: Theme.Spacing.xs) {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14, weight: .bold))
+                        .scaleEffect(successIconScale)
+                    Text(success)
+                        .font(Theme.Fonts.caption())
+                }
+                .foregroundStyle(Theme.Colors.good)
+                .padding(.top, Theme.Spacing.sm)
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
+            }
+
+            Spacer()
+
+            // Continue button — always pinned just above safe area
+            Button(action: redeemCode) {
+                HStack(spacing: Theme.Spacing.sm) {
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    }
+                    Text("Continue")
+                        .font(Theme.Fonts.bodyBold())
+                }
+            }
+            .elevatedButtonStyle(color:
+                code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading || successMessage != nil
+                    ? Theme.Colors.neutralLight
+                    : Theme.Colors.neutral900
+            )
+            .animation(.easeInOut(duration: 0.2), value: code.isEmpty)
+            .disabled(code.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isLoading || successMessage != nil)
+            .padding(.horizontal, Theme.Spacing.screenHorizontal)
+            .padding(.bottom, Theme.Spacing.lg)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
             Analytics.logEvent("onboarding_invite_code", parameters: nil)
         }
@@ -209,16 +174,13 @@ struct InviteCodeContent: View {
     private func handleSuccess(_ code: String) {
         isLoading = false
 
-        // Redeem the code (increment usage)
-        Task { try? await FirebaseService.shared.redeemInviteCode(code) }
-
         // Success haptic
         let notification = UINotificationFeedbackGenerator()
         notification.notificationOccurred(.success)
 
         // Show success message with animation
         withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
-            successMessage = "Code redeemed! Enjoy full access."
+            successMessage = "Code accepted! Welcome to Pooply."
         }
 
         // Confetti-like scale animation on icon
@@ -233,8 +195,10 @@ struct InviteCodeContent: View {
 
         Analytics.logEvent("onboarding_invite_code_redeemed", parameters: nil)
 
-        // Set redeemed flag
+        // Stash the code so completion can record the redemption AFTER auth
+        // (the Firestore write needs a userId on `redeemedBy`).
         state.inviteCodeRedeemed = true
+        state.inviteCodeValue = code.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
 
         // Auto-advance after delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {

@@ -16,15 +16,11 @@
 		44704F692E7E15ED0058A421 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F682E7E15ED0058A421 /* Extensions.swift */; };
 		44704F6B2E7E1AC40058A421 /* InsightsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F6A2E7E1AC40058A421 /* InsightsView.swift */; };
 		44704F6E2E7E215F0058A421 /* LogCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44704F6D2E7E215F0058A421 /* LogCard.swift */; };
-		C0046A32396F4C8AB834EA63 /* GutSenseRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FCBC0352E74C329275EC7C /* GutSenseRing.swift */; };
-		A62283675FE047B8834E5D4C /* CalibrationProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B809FF6F93DB4719B1806C33 /* CalibrationProgressBar.swift */; };
-		87227CF46E4E40D990D39697 /* ColorFloodAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EDB8F6F2F146BE959D78D4 /* ColorFloodAnimation.swift */; };
 		44758F132E70BE560055D972 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44758F122E70BE560055D972 /* HomeView.swift */; };
-		44SPLASHVIDEO0000000000001 /* SplashVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44SPLASHVIDEO0000000000000 /* SplashVideoView.swift */; };
-		44SHARE0010000000000001 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44SHARE0010000000000000 /* ShareCardView.swift */; };
 		44A682452EAB0CD200B28781 /* CameraView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A682442EAB0CD200B28781 /* CameraView.swift */; };
 		44A682472EAB8C8200B28781 /* ManualEntryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A682462EAB8C8200B28781 /* ManualEntryView.swift */; };
 		44A682492EABFFFF00B28781 /* ProfileModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44A682482EABFFFF00B28781 /* ProfileModal.swift */; };
+		44ANIMINTRO000000000001 /* AnimatedBenefitsIntro.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ANIMINTRO000000000000 /* AnimatedBenefitsIntro.swift */; };
 		44D123592DA07D6E00BFC590 /* PooplyApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D123582DA07D6E00BFC590 /* PooplyApp.swift */; };
 		44D1235D2DA07D7200BFC590 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44D1235C2DA07D7200BFC590 /* Assets.xcassets */; };
 		44D123602DA07D7200BFC590 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 44D1235F2DA07D7200BFC590 /* Preview Assets.xcassets */; };
@@ -34,6 +30,12 @@
 		44D123752DA1C1D600BFC590 /* Nunito-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44D123742DA1C1D600BFC590 /* Nunito-Regular.ttf */; };
 		44DESIGN012EC8000000001 /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44DESIGN012EC8000000000 /* DesignSystem.swift */; };
 		44FLOAT012EC8000000001 /* FloatingTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44FLOAT012EC8000000000 /* FloatingTabBar.swift */; };
+		44JKFONT0100000000000001 /* PlusJakartaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0100000000000000 /* PlusJakartaSans-Regular.ttf */; };
+		44JKFONT0200000000000001 /* PlusJakartaSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0200000000000000 /* PlusJakartaSans-Medium.ttf */; };
+		44JKFONT0300000000000001 /* PlusJakartaSans-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0300000000000000 /* PlusJakartaSans-SemiBold.ttf */; };
+		44JKFONT0400000000000001 /* PlusJakartaSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0400000000000000 /* PlusJakartaSans-Bold.ttf */; };
+		44JKFONT0500000000000001 /* PlusJakartaSans-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0500000000000000 /* PlusJakartaSans-ExtraBold.ttf */; };
+		44NOTIF0000000000000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44NOTIF0000000000000000 /* NotificationService.swift */; };
 		44ONBOARD01000000000001 /* UserDefaultsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ONBOARD01000000000000 /* UserDefaultsService.swift */; };
 		44ONBOARD02000000000001 /* OnboardingData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ONBOARD02000000000000 /* OnboardingData.swift */; };
 		44ONBOARD03000000000001 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ONBOARD03000000000000 /* OnboardingView.swift */; };
@@ -43,11 +45,16 @@
 		44ONBOARD07000000000001 /* QuestionnaireScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ONBOARD07000000000000 /* QuestionnaireScreen.swift */; };
 		44ONBOARD08000000000001 /* CompletionScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ONBOARD08000000000000 /* CompletionScreen.swift */; };
 		44ONBOARD09000000000001 /* InviteCodeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ONBOARD09000000000000 /* InviteCodeScreen.swift */; };
-		44ANIMINTRO000000000001 /* AnimatedBenefitsIntro.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44ANIMINTRO000000000000 /* AnimatedBenefitsIntro.swift */; };
 		44PAYWALL0000000000001 /* PaywallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44PAYWALL0000000000000 /* PaywallView.swift */; };
+		44POOPLYVIDEO000000000001 /* pooply.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 44POOPLYVIDEO000000000000 /* pooply.mp4 */; };
 		44RATING00000000000001 /* RatingCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44RATING00000000000000 /* RatingCard.swift */; };
-		44NOTIF0000000000000001 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44NOTIF0000000000000000 /* NotificationService.swift */; };
+		44REVCAT000000000000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 44REVCAT000000000000000 /* RevenueCat */; };
+		44SHARE0010000000000001 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44SHARE0010000000000000 /* ShareCardView.swift */; };
+		44SPLASHVIDEO0000000000001 /* SplashVideoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44SPLASHVIDEO0000000000000 /* SplashVideoView.swift */; };
 		44SUBSCR000000000000001 /* SubscriptionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44SUBSCR000000000000000 /* SubscriptionService.swift */; };
+		87227CF46E4E40D990D39697 /* ColorFloodAnimation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9EDB8F6F2F146BE959D78D4 /* ColorFloodAnimation.swift */; };
+		A62283675FE047B8834E5D4C /* CalibrationProgressBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = B809FF6F93DB4719B1806C33 /* CalibrationProgressBar.swift */; };
+		C0046A32396F4C8AB834EA63 /* GutSenseRing.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2FCBC0352E74C329275EC7C /* GutSenseRing.swift */; };
 		F0526A022F293D480080043D /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = F0526A012F293D480080043D /* FirebaseAnalytics */; };
 		F0526A042F293D480080043D /* FirebaseAnalyticsCore in Frameworks */ = {isa = PBXBuildFile; productRef = F0526A032F293D480080043D /* FirebaseAnalyticsCore */; };
 		F0526A062F293D480080043D /* FirebaseAnalyticsIdentitySupport in Frameworks */ = {isa = PBXBuildFile; productRef = F0526A052F293D480080043D /* FirebaseAnalyticsIdentitySupport */; };
@@ -63,16 +70,9 @@
 		F0526A1A2F293D480080043D /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = F0526A192F293D480080043D /* FirebaseStorage */; };
 		F0526A1C2F293D480080043D /* FirebaseStorageCombine-Community in Frameworks */ = {isa = PBXBuildFile; productRef = F0526A1B2F293D480080043D /* FirebaseStorageCombine-Community */; };
 		F0526A1E2F2942C60080043D /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = F0526A1D2F2942C60080043D /* GoogleService-Info.plist */; };
-		44REVCAT000000000000001 /* RevenueCat in Frameworks */ = {isa = PBXBuildFile; productRef = 44REVCAT000000000000000 /* RevenueCat */; };
 		NX4VCKZ21R5FRZTLMG63OLIG /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16DTYQBU4JOHRZDJ5DJBA213 /* AuthView.swift */; };
 		Z497XIFT3W9NIOC34UHQGETO /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = HVNYVEM3KCUZ39LT8NMFNN46 /* AuthService.swift */; };
 		ZFOMYPX18RKE2BFUCDICN8FH /* AnalysisService.swift in Sources */ = {isa = PBXBuildFile; fileRef = ZIQ546A91VO467QI46S806BL /* AnalysisService.swift */; };
-		44JKFONT0100000000000001 /* PlusJakartaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0100000000000000 /* PlusJakartaSans-Regular.ttf */; };
-		44JKFONT0200000000000001 /* PlusJakartaSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0200000000000000 /* PlusJakartaSans-Medium.ttf */; };
-		44JKFONT0300000000000001 /* PlusJakartaSans-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0300000000000000 /* PlusJakartaSans-SemiBold.ttf */; };
-		44JKFONT0400000000000001 /* PlusJakartaSans-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0400000000000000 /* PlusJakartaSans-Bold.ttf */; };
-		44JKFONT0500000000000001 /* PlusJakartaSans-ExtraBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 44JKFONT0500000000000000 /* PlusJakartaSans-ExtraBold.ttf */; };
-		44POOPLYVIDEO000000000001 /* pooply.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 44POOPLYVIDEO000000000000 /* pooply.mp4 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -84,15 +84,11 @@
 		44704F682E7E15ED0058A421 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		44704F6A2E7E1AC40058A421 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		44704F6D2E7E215F0058A421 /* LogCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogCard.swift; sourceTree = "<group>"; };
-		D2FCBC0352E74C329275EC7C /* GutSenseRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GutSenseRing.swift; sourceTree = "<group>"; };
-		B809FF6F93DB4719B1806C33 /* CalibrationProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationProgressBar.swift; sourceTree = "<group>"; };
-		C9EDB8F6F2F146BE959D78D4 /* ColorFloodAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorFloodAnimation.swift; sourceTree = "<group>"; };
 		44758F122E70BE560055D972 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
-		44SPLASHVIDEO0000000000000 /* SplashVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashVideoView.swift; sourceTree = "<group>"; };
-		44SHARE0010000000000000 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
 		44A682442EAB0CD200B28781 /* CameraView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraView.swift; sourceTree = "<group>"; };
 		44A682462EAB8C8200B28781 /* ManualEntryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualEntryView.swift; sourceTree = "<group>"; };
 		44A682482EABFFFF00B28781 /* ProfileModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileModal.swift; sourceTree = "<group>"; };
+		44ANIMINTRO000000000000 /* AnimatedBenefitsIntro.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBenefitsIntro.swift; sourceTree = "<group>"; };
 		44D123552DA07D6E00BFC590 /* Pooply.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Pooply.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		44D123582DA07D6E00BFC590 /* PooplyApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PooplyApp.swift; sourceTree = "<group>"; };
 		44D1235C2DA07D7200BFC590 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -104,6 +100,12 @@
 		44D123762DA1C1FE00BFC590 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		44DESIGN012EC8000000000 /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		44FLOAT012EC8000000000 /* FloatingTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FloatingTabBar.swift; sourceTree = "<group>"; };
+		44JKFONT0100000000000000 /* PlusJakartaSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Regular.ttf"; sourceTree = "<group>"; };
+		44JKFONT0200000000000000 /* PlusJakartaSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Medium.ttf"; sourceTree = "<group>"; };
+		44JKFONT0300000000000000 /* PlusJakartaSans-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-SemiBold.ttf"; sourceTree = "<group>"; };
+		44JKFONT0400000000000000 /* PlusJakartaSans-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Bold.ttf"; sourceTree = "<group>"; };
+		44JKFONT0500000000000000 /* PlusJakartaSans-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-ExtraBold.ttf"; sourceTree = "<group>"; };
+		44NOTIF0000000000000000 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
 		44ONBOARD01000000000000 /* UserDefaultsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDefaultsService.swift; sourceTree = "<group>"; };
 		44ONBOARD02000000000000 /* OnboardingData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingData.swift; sourceTree = "<group>"; };
 		44ONBOARD03000000000000 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
@@ -113,23 +115,21 @@
 		44ONBOARD07000000000000 /* QuestionnaireScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuestionnaireScreen.swift; sourceTree = "<group>"; };
 		44ONBOARD08000000000000 /* CompletionScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionScreen.swift; sourceTree = "<group>"; };
 		44ONBOARD09000000000000 /* InviteCodeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteCodeScreen.swift; sourceTree = "<group>"; };
-		44ANIMINTRO000000000000 /* AnimatedBenefitsIntro.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimatedBenefitsIntro.swift; sourceTree = "<group>"; };
 		44PAYWALL0000000000000 /* PaywallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallView.swift; sourceTree = "<group>"; };
+		44POOPLYVIDEO000000000000 /* pooply.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = pooply.mp4; sourceTree = "<group>"; };
 		44RATING00000000000000 /* RatingCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RatingCard.swift; sourceTree = "<group>"; };
-		44NOTIF0000000000000000 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		44SHARE0010000000000000 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
+		44SPLASHVIDEO0000000000000 /* SplashVideoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashVideoView.swift; sourceTree = "<group>"; };
 		44SUBSCR000000000000000 /* SubscriptionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SubscriptionService.swift; sourceTree = "<group>"; };
+		B809FF6F93DB4719B1806C33 /* CalibrationProgressBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalibrationProgressBar.swift; sourceTree = "<group>"; };
+		C9EDB8F6F2F146BE959D78D4 /* ColorFloodAnimation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorFloodAnimation.swift; sourceTree = "<group>"; };
+		D2FCBC0352E74C329275EC7C /* GutSenseRing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GutSenseRing.swift; sourceTree = "<group>"; };
 		F0526A1D2F2942C60080043D /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		F0526A1F2F294C100080043D /* Pooply.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Pooply.entitlements; sourceTree = "<group>"; };
 		F0CAFE012F4B00000000CAFE /* Configuration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = Configuration.storekit; sourceTree = "<group>"; };
 		HVNYVEM3KCUZ39LT8NMFNN46 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		Z9F4EBURYK8MGO8HNYB8OU5E /* FirebaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseService.swift; sourceTree = "<group>"; };
 		ZIQ546A91VO467QI46S806BL /* AnalysisService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisService.swift; sourceTree = "<group>"; };
-		44JKFONT0100000000000000 /* PlusJakartaSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Regular.ttf"; sourceTree = "<group>"; };
-		44JKFONT0200000000000000 /* PlusJakartaSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Medium.ttf"; sourceTree = "<group>"; };
-		44JKFONT0300000000000000 /* PlusJakartaSans-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-SemiBold.ttf"; sourceTree = "<group>"; };
-		44JKFONT0400000000000000 /* PlusJakartaSans-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Bold.ttf"; sourceTree = "<group>"; };
-		44JKFONT0500000000000000 /* PlusJakartaSans-ExtraBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-ExtraBold.ttf"; sourceTree = "<group>"; };
-		44POOPLYVIDEO000000000000 /* pooply.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = pooply.mp4; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -258,6 +258,18 @@
 			path = Views;
 			sourceTree = "<group>";
 		};
+		44JKFONT00GROUP000000000 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				44JKFONT0100000000000000 /* PlusJakartaSans-Regular.ttf */,
+				44JKFONT0200000000000000 /* PlusJakartaSans-Medium.ttf */,
+				44JKFONT0300000000000000 /* PlusJakartaSans-SemiBold.ttf */,
+				44JKFONT0400000000000000 /* PlusJakartaSans-Bold.ttf */,
+				44JKFONT0500000000000000 /* PlusJakartaSans-ExtraBold.ttf */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		44ONBOARD00ONBOARDING00 /* Onboarding */ = {
 			isa = PBXGroup;
 			children = (
@@ -272,18 +284,6 @@
 				44ANIMINTRO000000000000 /* AnimatedBenefitsIntro.swift */,
 			);
 			path = Onboarding;
-			sourceTree = "<group>";
-		};
-		44JKFONT00GROUP000000000 /* Fonts */ = {
-			isa = PBXGroup;
-			children = (
-				44JKFONT0100000000000000 /* PlusJakartaSans-Regular.ttf */,
-				44JKFONT0200000000000000 /* PlusJakartaSans-Medium.ttf */,
-				44JKFONT0300000000000000 /* PlusJakartaSans-SemiBold.ttf */,
-				44JKFONT0400000000000000 /* PlusJakartaSans-Bold.ttf */,
-				44JKFONT0500000000000000 /* PlusJakartaSans-ExtraBold.ttf */,
-			);
-			path = Fonts;
 			sourceTree = "<group>";
 		};
 		44ONBOARD00SERVICES00000 /* Services */ = {
@@ -572,18 +572,22 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Pooply/Pooply.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Pooply/Preview Content\"";
 				DEVELOPMENT_TEAM = KC575847UZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Pooply/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = pooply;
+				INFOPLIST_KEY_CFBundleDisplayName = Pooply;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Pooply uses your camera to analyze and score your stool for health insights.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Pooply needs access to your photo library so you can select images for analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -609,18 +613,22 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Pooply/Pooply.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 2;
 				DEVELOPMENT_ASSET_PATHS = "\"Pooply/Preview Content\"";
 				DEVELOPMENT_TEAM = KC575847UZ;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Pooply/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = pooply;
+				INFOPLIST_KEY_CFBundleDisplayName = Pooply;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.healthcare-fitness";
+				INFOPLIST_KEY_NSCameraUsageDescription = "Pooply uses your camera to analyze and score your stool for health insights.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Pooply needs access to your photo library so you can select images for analysis.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
-				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -695,6 +703,11 @@
 			package = 44704F532E7E0ABA0058A421 /* XCRemoteSwiftPackageReference "Alamofire" */;
 			productName = Alamofire;
 		};
+		44REVCAT000000000000000 /* RevenueCat */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F0E113532F57A3DF00417DD4 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
+			productName = RevenueCat;
+		};
 		F0526A012F293D480080043D /* FirebaseAnalytics */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = F0526A002F293D480080043D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
@@ -764,11 +777,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F0526A002F293D480080043D /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = "FirebaseStorageCombine-Community";
-		};
-		44REVCAT000000000000000 /* RevenueCat */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = F0E113532F57A3DF00417DD4 /* XCRemoteSwiftPackageReference "purchases-ios-spm" */;
-			productName = RevenueCat;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

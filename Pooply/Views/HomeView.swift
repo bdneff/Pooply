@@ -2,9 +2,12 @@
 //  HomeView.swift
 //  Pooply
 //
-//  Home — v4 Liquid Glass + Mesh
-//  Massive PoopScore hero, glass metric trio, mascot avatar.
-//  Bottom nav (Home/Insights pill) and FAB are rendered by ContentView.
+//  Home — v5 Tiimo-minimal, restructured:
+//  - Last 7 day-rings ABOVE the score
+//  - Big Poop Score; label + trend chip tight underneath
+//  - Slim plain-text Last Log line (no card)
+//  - Green Zone section Duolingo-style: stat sub-boxes + calendar (no logs inside)
+//  - Selected day LogCards rendered separately under the calendar
 //
 
 import SwiftUI
@@ -12,494 +15,715 @@ import FirebaseAnalytics
 
 struct HomeView: View {
     @EnvironmentObject var userViewModel: UserViewModel
-    @Binding var selectedTimeframe: String
     @Binding var showProfile: Bool
     @Binding var showLogOptions: Bool
 
     @State private var scoreAppeared: Bool = false
+    @State private var selectedMonth: Date = .currentMonth
+    @State private var dayLogsModalDate: Date?
 
-    private var firstName: String {
-        let name = userViewModel.user.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        return name.split(separator: " ").first.map(String.init) ?? name
-    }
-
-    private var score: Int { userViewModel.averagePoopScore(for: selectedTimeframe) }
-
-    private var scoreDelta: Int {
-        let cal = Calendar.current
-        let now = Date()
-        let (prevStart, prevEnd): (Date, Date) = {
-            switch selectedTimeframe {
-            case "TODAY":
-                let s = cal.startOfDay(for: now)
-                let prev = cal.date(byAdding: .day, value: -1, to: s)!
-                return (prev, s)
-            case "MONTH":
-                let s = cal.date(byAdding: .month, value: -1, to: now) ?? now
-                let prev = cal.date(byAdding: .month, value: -2, to: now) ?? now
-                return (prev, s)
-            default:
-                let s = cal.date(byAdding: .day, value: -7, to: now) ?? now
-                let prev = cal.date(byAdding: .day, value: -14, to: now) ?? now
-                return (prev, s)
-            }
-        }()
-
-        let prevLogs = userViewModel.logHistory.filter { $0.timestamp >= prevStart && $0.timestamp < prevEnd }
-        guard !prevLogs.isEmpty else { return 0 }
-        let prevAvg = prevLogs.map { UserViewModel.calculatePoopScoreStatic(for: $0) }.reduce(0, +) / prevLogs.count
-        return score - prevAvg
-    }
+    private var score: Int { userViewModel.rollingPoopScore7Day }
+    private var delta: Int { userViewModel.poopScoreDelta7Day }
 
     var body: some View {
-        VStack(spacing: 0) {
+        ScrollView(.vertical, showsIndicators: false) {
+            VStack(spacing: 0) {
 
-            // MARK: - Header (greeting + mascot avatar)
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Nice to see you,")
-                        .font(Theme.Fonts.body(15))
-                        .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.62))
-                    Text(firstName)
-                        .font(Theme.Fonts.title(28))
-                        .foregroundStyle(Theme.Colors.textOnMesh)
-                }
-                Spacer()
-                MascotAvatar(size: 52) { showProfile = true }
-            }
-            .padding(.horizontal, Theme.Spacing.screenHorizontal)
-            .padding(.top, 4)
+                topBar
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, 4)
 
-            Spacer(minLength: 8)
+                Last7DayStrip(userVM: userViewModel)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, 16)
 
-            // MARK: - Hero (label + inline timeframe + score + particles)
-            VStack(spacing: 8) {
-                Text("Poop Score")
-                    .font(Theme.Fonts.subheading(17))
-                    .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.85))
+                heroScore
+                    .padding(.top, 8)
+                    .padding(.bottom, 28)
 
-                InlineTimeframePicker(selected: $selectedTimeframe)
-                    .padding(.bottom, 18)
-
-                ZStack {
-                    PoopScoreParticles()
-                        .frame(height: 220)
-                        .allowsHitTesting(false)
-
-                    ZStack(alignment: .topTrailing) {
-                        Text("\(score)")
-                            .font(Theme.Fonts.hero(140))
-                            .foregroundStyle(Theme.Colors.textOnMesh)
-                            .contentTransition(.numericText())
-                            .scaleEffect(scoreAppeared ? 1.0 : 0.85)
-                            .opacity(scoreAppeared ? 1.0 : 0.0)
-                            .animation(.spring(response: 0.7, dampingFraction: 0.62).delay(0.1), value: scoreAppeared)
-
-                        if scoreDelta != 0 {
-                            DeltaBadge(delta: scoreDelta)
-                                .offset(x: 24, y: -4)
-                                .scaleEffect(scoreAppeared ? 1.0 : 0.3)
-                                .opacity(scoreAppeared ? 1.0 : 0.0)
-                                .animation(.spring(response: 0.5, dampingFraction: 0.55).delay(0.5), value: scoreAppeared)
-                        }
+                // Green Zone + Calendar (tap day → modal)
+                GreenZoneCalendarCard(
+                    userVM: userViewModel,
+                    selectedMonth: $selectedMonth,
+                    onDayTap: { date in
+                        dayLogsModalDate = date
                     }
-                }
-            }
-            .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-            Spacer(minLength: 4)
-
-            // MARK: - Glass Metric Trio
-            HStack(spacing: 10) {
-                MetricGlassCard(
-                    label: "HYDRATION",
-                    value: percentString(userViewModel.averageHydrationPercentage(for: selectedTimeframe)),
-                    sparkline: hydrationSparkline,
-                    color: Theme.Colors.hydration,
-                    icon: "drop.fill"
                 )
-                MetricGlassCard(
-                    label: "BLOOD",
-                    value: percentString(userViewModel.averageBloodPercentage(for: selectedTimeframe)),
-                    sparkline: bloodSparkline,
-                    color: Theme.Colors.blood,
-                    icon: "heart.fill",
-                    invertColor: true
-                )
-                MetricGlassCard(
-                    label: "FIBER",
-                    value: percentString(userViewModel.averageFiberPercentage(for: selectedTimeframe)),
-                    sparkline: fiberSparkline,
-                    color: Theme.Colors.fiber,
-                    icon: "leaf.fill"
-                )
-            }
-            .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-            // MARK: - Today's Read (compact) — tighter to the metric trio
-            HomeInsightCardCompact()
                 .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.top, 8)
 
-            // Leave space for the nav pill + FAB row pinned to bottom
-            Spacer(minLength: 110)
+                // Recent Logs (last 3)
+                RecentLogsSection(userVM: userViewModel)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, 20)
+
+                Spacer().frame(height: 120)
+            }
         }
         .onAppear {
             scoreAppeared = true
             Analytics.logEvent("home_viewed", parameters: nil)
         }
-        .onChange(of: selectedTimeframe) { _, _ in
-            scoreAppeared = false
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                withAnimation { scoreAppeared = true }
-            }
-        }
-    }
-
-    private func percentString(_ value: CGFloat) -> String {
-        "\(Int(value * 100))%"
-    }
-
-    private var hydrationSparkline: [CGFloat] {
-        sparklineValues { log in log.hydrationPercentage.map { CGFloat($0) } ?? 0.5 }
-    }
-    private var fiberSparkline: [CGFloat] {
-        sparklineValues { log in log.fiberPercentage.map { CGFloat($0) } ?? 0.4 }
-    }
-    private var bloodSparkline: [CGFloat] {
-        sparklineValues { log in CGFloat(log.bloodPercentage) }
-    }
-
-    private func sparklineValues(_ extract: (Log) -> CGFloat) -> [CGFloat] {
-        let logs = userViewModel.getLogsForTimeframe(selectedTimeframe)
-            .sorted { $0.timestamp < $1.timestamp }
-            .suffix(7)
-        let values = logs.map(extract)
-        guard !values.isEmpty else { return [0.5, 0.55, 0.5, 0.6, 0.55, 0.65, 0.6] }
-        return Array(values)
-    }
-}
-
-// MARK: - Delta Badge (e.g. "+4" green pill)
-
-struct DeltaBadge: View {
-    let delta: Int
-
-    private var color: Color {
-        delta >= 0 ? Theme.Colors.mint : Theme.Colors.blood
-    }
-
-    private var symbol: String {
-        delta >= 0 ? "+" : ""
-    }
-
-    var body: some View {
-        Text("\(symbol)\(delta)")
-            .font(Theme.Fonts.bodyBold(15))
-            .foregroundStyle(.white)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 6)
-            .background(
-                Capsule().fill(color)
-            )
-            .shadow(color: color.opacity(0.35), radius: 8, x: 0, y: 4)
-    }
-}
-
-// MARK: - Inside Score Pill
-
-struct InsideScorePill: View {
-    @State private var pressed = false
-
-    var body: some View {
-        Button {
-            Theme.Haptics.light()
-        } label: {
-            HStack(spacing: 6) {
-                Text("Inside the score")
-                    .font(Theme.Fonts.captionBold(13))
-                Image(systemName: "arrow.right")
-                    .font(.system(size: 11, weight: .bold))
-            }
-            .foregroundStyle(Theme.Colors.textOnGlass)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .glassSurface(radius: Theme.Radius.pill)
-            .scaleEffect(pressed ? 0.94 : 1.0)
-        }
-        .buttonStyle(.plain)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { isPressing in
-            withAnimation(Theme.Animation.press) { pressed = isPressing }
-        }, perform: {})
-    }
-}
-
-// MARK: - Particle Field around the Poop Score
-
-struct PoopScoreParticles: View {
-    @State private var particles: [Particle] = (0..<140).map { _ in Particle.random() }
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1.0 / 30.0)) { context in
-            let t = context.date.timeIntervalSinceReferenceDate
-            Canvas { ctx, size in
-                let center = CGPoint(x: size.width / 2, y: size.height / 2)
-                for p in particles {
-                    let phase = t * p.speed + p.phaseOffset
-                    let radius = p.radius + 8 * sin(phase * 0.6)
-                    let angle = p.angle + CGFloat(t * p.angularSpeed)
-                    let x = center.x + cos(angle) * radius
-                    let y = center.y + sin(angle) * radius * 0.78
-                    let alpha = 0.35 + 0.25 * sin(phase * 1.4)
-                    let rect = CGRect(x: x - p.size/2, y: y - p.size/2, width: p.size, height: p.size)
-                    ctx.fill(Path(ellipseIn: rect), with: .color(p.color.opacity(alpha)))
-                }
-            }
-        }
-    }
-
-    struct Particle {
-        var angle: CGFloat
-        var radius: CGFloat
-        var size: CGFloat
-        var speed: Double
-        var angularSpeed: Double
-        var phaseOffset: Double
-        var color: Color
-
-        static func random() -> Particle {
-            let palette: [Color] = [
-                Theme.Colors.iconBlue300,
-                Theme.Colors.iconBlue400,
-                Theme.Colors.iconBlue200,
-                Color.white,
-                Color.white
-            ]
-            return Particle(
-                angle: CGFloat.random(in: 0...(2 * .pi)),
-                radius: CGFloat.random(in: 60...170),
-                size: CGFloat.random(in: 1.3...3.4),
-                speed: Double.random(in: 0.4...1.2),
-                angularSpeed: Double.random(in: -0.12...0.12),
-                phaseOffset: Double.random(in: 0...(2 * .pi)),
-                color: palette.randomElement() ?? .white
-            )
-        }
-    }
-}
-
-// MARK: - Metric Glass Card (sparkline + value)
-
-struct MetricGlassCard: View {
-    let label: String
-    let value: String
-    let sparkline: [CGFloat]
-    let color: Color
-    let icon: String
-    var invertColor: Bool = false
-
-    @State private var appeared: Bool = false
-
-    private var displayColor: Color {
-        if invertColor {
-            return value == "0%" ? Theme.Colors.mint : Theme.Colors.blood
-        }
-        return color
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Sparkline(values: sparkline, color: displayColor)
-                .frame(height: 28)
-                .opacity(appeared ? 1 : 0)
-                .animation(.easeOut(duration: 0.7).delay(0.15), value: appeared)
-
-            Spacer(minLength: 0)
-
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(alignment: .lastTextBaseline, spacing: 4) {
-                    Image(systemName: icon)
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundStyle(displayColor)
-                    Text(value)
-                        .font(Theme.Fonts.heading(20))
-                        .foregroundStyle(Theme.Colors.textOnGlass)
-                        .contentTransition(.numericText())
-                }
-
-                Text(label)
-                    .font(Theme.Fonts.label(9))
-                    .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
-                    .tracking(0.8)
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 12)
-        .frame(maxWidth: .infinity, minHeight: 135, maxHeight: 135, alignment: .topLeading)
-        .glassSurface(radius: 18)
-        .onAppear { appeared = true }
-    }
-}
-
-// MARK: - Sparkline
-
-struct Sparkline: View {
-    let values: [CGFloat]
-    let color: Color
-
-    var body: some View {
-        GeometryReader { geo in
-            let path = smoothPath(in: geo.size)
-            ZStack {
-                path
-                    .addingLine(to: CGPoint(x: geo.size.width, y: geo.size.height))
-                    .addingLine(to: CGPoint(x: 0, y: geo.size.height))
-                    .fill(
-                        LinearGradient(
-                            colors: [color.opacity(0.18), color.opacity(0)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-
-                path
-                    .stroke(color, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
-
-                if let last = values.last {
-                    let x = geo.size.width
-                    let y = yPosition(for: last, height: geo.size.height)
-                    Circle()
-                        .fill(color)
-                        .frame(width: 6, height: 6)
-                        .position(x: x - 3, y: y)
-                }
-            }
-        }
-    }
-
-    private func smoothPath(in size: CGSize) -> Path {
-        guard values.count > 1 else { return Path() }
-        let stepX = size.width / CGFloat(values.count - 1)
-        let points: [CGPoint] = values.enumerated().map { i, v in
-            CGPoint(x: CGFloat(i) * stepX, y: yPosition(for: v, height: size.height))
-        }
-
-        var path = Path()
-        path.move(to: points[0])
-
-        for i in 1..<points.count {
-            let prev = points[i - 1]
-            let curr = points[i]
-            let mid = CGPoint(x: (prev.x + curr.x) / 2, y: (prev.y + curr.y) / 2)
-            if i == 1 {
-                path.addLine(to: mid)
-            } else {
-                path.addQuadCurve(to: mid, control: prev)
-            }
-            if i == points.count - 1 {
-                path.addQuadCurve(to: curr, control: prev)
-            }
-        }
-        return path
-    }
-
-    private func yPosition(for value: CGFloat, height: CGFloat) -> CGFloat {
-        let minV = values.min() ?? 0
-        let maxV = values.max() ?? 1
-        let range = max(maxV - minV, 0.0001)
-        let normalized = (value - minV) / range
-        return height - (normalized * (height - 4)) - 2
-    }
-}
-
-extension Path {
-    func addingLine(to point: CGPoint) -> Path {
-        var copy = self
-        copy.addLine(to: point)
-        return copy
-    }
-}
-
-// MARK: - Home Insight Card (today's read) — compact, single-row
-
-struct HomeInsightCardCompact: View {
-    @EnvironmentObject var userViewModel: UserViewModel
-    @State private var showInsightsModal: Bool = false
-    @State private var pressed: Bool = false
-
-    private var insight: String {
-        let baseline = userViewModel.calculatePersonalBaseline()
-        let avg = baseline.averagePoopScore
-        let hydration = baseline.averageHydration
-
-        if hydration < 0.5 {
-            return "Your hydration is trending low. Try drinking more water."
-        }
-        if avg < 60 {
-            return "Your gut needs a tune-up. Add fiber and water."
-        }
-        if avg >= 80 {
-            return "Your gut is dialed. Keep it up."
-        }
-        return "You're trending right where you want to be."
-    }
-
-    var body: some View {
-        Button {
-            Theme.Haptics.light()
-            showInsightsModal = true
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("TODAY'S READ")
-                        .font(Theme.Fonts.label(9))
-                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
-                        .tracking(1.2)
-
-                    Text(insight)
-                        .font(.custom("PlusJakartaSans-SemiBold", size: 14))
-                        .foregroundStyle(Theme.Colors.textOnGlass)
-                        .lineLimit(2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 4)
-                ZStack {
-                    Circle().fill(Theme.Colors.neutral900).frame(width: 32, height: 32)
-                    Image(systemName: "arrow.right")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundStyle(.white)
-                }
-                .shadow(color: Color.black.opacity(0.15), radius: 4, x: 0, y: 2)
-            }
-            .padding(.horizontal, 14)
-            .padding(.vertical, 12)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
-            .glassSurface(radius: 20)
-            .scaleEffect(pressed ? 0.97 : 1.0)
-        }
-        .buttonStyle(.plain)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { isPressing in
-            withAnimation(Theme.Animation.press) { pressed = isPressing }
-        }, perform: {})
-        .sheet(isPresented: $showInsightsModal) {
-            TodaysReadModal(headline: insight)
-                .environmentObject(userViewModel)
+        .sheet(item: Binding(
+            get: { dayLogsModalDate.map { DayLogsIdentifier(date: $0) } },
+            set: { dayLogsModalDate = $0?.date }
+        )) { ident in
+            DayLogsModal(date: ident.date, userVM: userViewModel)
                 .presentationBackground(.clear)
                 .presentationDragIndicator(.visible)
         }
     }
+
+    // MARK: - Top bar
+
+    private var topBar: some View {
+        HStack(alignment: .top) {
+            Text("Pooply")
+                .font(Theme.Fonts.title(28))
+                .foregroundStyle(Theme.Colors.espresso)
+                .padding(.top, 6)
+
+            Spacer()
+
+            MascotAvatar(size: 52) { showProfile = true }
+        }
+    }
+
+    // MARK: - Hero (number, then label + delta chip tight below)
+
+    private var heroScore: some View {
+        VStack(spacing: 0) {
+            ZStack(alignment: .topTrailing) {
+                Text("\(score)")
+                    .font(Theme.Fonts.hero(130))
+                    .foregroundStyle(Theme.Colors.espresso)
+                    .contentTransition(.numericText())
+                    .scaleEffect(scoreAppeared ? 1.0 : 0.85)
+                    .opacity(scoreAppeared ? 1.0 : 0.0)
+                    .animation(.spring(response: 0.7, dampingFraction: 0.62).delay(0.1), value: scoreAppeared)
+
+                if delta != 0 {
+                    deltaIndicator
+                        .offset(x: 18, y: 14)
+                        .scaleEffect(scoreAppeared ? 1.0 : 0.3)
+                        .opacity(scoreAppeared ? 1.0 : 0.0)
+                        .animation(.spring(response: 0.55, dampingFraction: 0.6).delay(0.45), value: scoreAppeared)
+                }
+            }
+
+            VStack(spacing: 10) {
+                Text("POOP SCORE")
+                    .font(Theme.Fonts.label(12))
+                    .tracking(1.5)
+                    .foregroundStyle(Theme.Colors.espressoLight)
+
+                if userViewModel.lastLog != nil {
+                    HStack(spacing: 5) {
+                        Image(systemName: "clock")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.espressoLight)
+                        Text("Last log: \(userViewModel.timeSinceLastPoopString)")
+                            .font(Theme.Fonts.caption(12))
+                            .foregroundStyle(Theme.Colors.espressoLight)
+                    }
+                } else {
+                    // First-launch hint — gives the screen a job when there's no data yet.
+                    HStack(spacing: 5) {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(Theme.Colors.espressoLight)
+                        Text("Tap + to log your first poop")
+                            .font(Theme.Fonts.caption(12))
+                            .foregroundStyle(Theme.Colors.espressoLight)
+                    }
+                }
+            }
+            .padding(.top, -6)  // pull label a little closer to the number
+        }
+    }
+
+    private var deltaIndicator: some View {
+        let isUp = delta >= 0
+        let color = isUp ? Theme.Colors.dataGreen : Theme.Colors.dataPink
+        return HStack(spacing: 3) {
+            Image(systemName: isUp ? "arrow.up.right" : "arrow.down.right")
+                .font(.system(size: 10, weight: .bold))
+            Text("\(isUp ? "+" : "")\(delta)")
+                .font(Theme.Fonts.captionBold(13))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Capsule().fill(color.opacity(0.16)))
+        .overlay(Capsule().stroke(color.opacity(0.25), lineWidth: 0.5))
+    }
 }
 
-// MARK: - Today's Read Modal (full AI insights, frosted sheet)
+// MARK: - Last 7 day-rings strip
 
-struct TodaysReadModal: View {
-    let headline: String
-    @EnvironmentObject var userViewModel: UserViewModel
-    @Environment(\.dismiss) private var dismiss
+struct Last7DayStrip: View {
+    let userVM: UserViewModel
 
-    private var insights: [UserViewModel.AdvancedInsight] {
-        userViewModel.generateAdvancedInsights(for: "WEEK")
+    fileprivate struct DayDot: Identifiable {
+        let id = UUID()
+        let date: Date
+        let weekday: String
+        let dayNum: String
+        let status: Status
+        let isToday: Bool
+
+        enum Status {
+            case greenZone
+            case mixed
+            case noLog
+        }
+    }
+
+    private var days: [DayDot] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let weekdayFmt = DateFormatter()
+        weekdayFmt.dateFormat = "EEEEE"
+        let dayFmt = DateFormatter()
+        dayFmt.dateFormat = "d"
+
+        return (0..<7).map { offset -> DayDot in
+            let date = cal.date(byAdding: .day, value: -(6 - offset), to: today)!
+            let logs = userVM.logHistory.filter { cal.isDate($0.timestamp, inSameDayAs: date) }
+            let status: DayDot.Status = {
+                if logs.isEmpty { return .noLog }
+                return userVM.isGreenZoneDay(date) ? .greenZone : .mixed
+            }()
+            return DayDot(
+                date: date,
+                weekday: weekdayFmt.string(from: date),
+                dayNum: dayFmt.string(from: date),
+                status: status,
+                isToday: cal.isDateInToday(date)
+            )
+        }
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(days) { day in
+                VStack(spacing: 6) {
+                    Text(day.weekday)
+                        .font(Theme.Fonts.label(10))
+                        .tracking(0.3)
+                        .foregroundStyle(Theme.Colors.espressoLight)
+
+                    ZStack {
+                        ringFor(day)
+                        Text(day.dayNum)
+                            .font(Theme.Fonts.captionBold(13))
+                            .foregroundStyle(textColor(for: day))
+                    }
+                    .frame(width: 36, height: 36)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    @ViewBuilder
+    fileprivate func ringFor(_ day: DayDot) -> some View {
+        if day.isToday {
+            Circle().strokeBorder(Theme.Colors.espresso, lineWidth: 2.5)
+        } else {
+            switch day.status {
+            case .greenZone:
+                Circle().strokeBorder(Theme.Colors.dataGreen, lineWidth: 2.5)
+            case .mixed:
+                Circle().strokeBorder(Theme.Colors.dataPink, lineWidth: 2.5)
+            case .noLog:
+                Circle().strokeBorder(
+                    Theme.Colors.espressoLight.opacity(0.35),
+                    style: StrokeStyle(lineWidth: 1.5, dash: [3, 3])
+                )
+            }
+        }
+    }
+
+    private func textColor(for day: DayDot) -> Color {
+        if day.isToday { return Theme.Colors.espresso }
+        switch day.status {
+        case .greenZone, .mixed: return Theme.Colors.espresso
+        case .noLog:             return Theme.Colors.espressoLight.opacity(0.6)
+        }
+    }
+}
+
+// MARK: - Last Logged plain-text line (no card)
+
+/// Last Log card — LogCard-style with a small "LAST LOG · 11h ago" header on top.
+struct LastLoggedLine: View {
+    let log: Log?
+    let timeAgo: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            // Header row: clock icon + LAST LOG · time ago
+            HStack(spacing: 6) {
+                Image(systemName: "clock")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(Theme.Colors.espressoLight)
+                Text("LAST LOG")
+                    .font(Theme.Fonts.label(10))
+                    .tracking(1.3)
+                    .foregroundStyle(Theme.Colors.espressoLight)
+                if log != nil {
+                    Text("·")
+                        .foregroundStyle(Theme.Colors.espressoLight)
+                    Text(timeAgo)
+                        .font(Theme.Fonts.captionBold(12))
+                        .foregroundStyle(Theme.Colors.espresso)
+                }
+                Spacer()
+            }
+
+            if let log {
+                // LogCard-style body wrapped in a thin gray border to differentiate from outer card
+                let s = UserViewModel.calculatePoopScoreStatic(for: log)
+                let band = scoreBandColor(s)
+                HStack(spacing: Theme.Spacing.md) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: Theme.Radius.small, style: .continuous)
+                            .fill(band.opacity(0.18))
+                        Image(log.type.rawValue)
+                            .resizable()
+                            .scaledToFit()
+                            .padding(8)
+                    }
+                    .frame(width: 48, height: 48)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(timeString(log.timestamp))
+                            .font(Theme.Fonts.bodyBold(14))
+                            .foregroundStyle(Theme.Colors.espresso)
+                        Text(dayString(log.timestamp))
+                            .font(Theme.Fonts.caption(12))
+                            .foregroundStyle(Theme.Colors.espressoLight)
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 2) {
+                            Text("\(s)")
+                                .font(Theme.Fonts.bodyBold(18))
+                                .foregroundStyle(Theme.Colors.espresso)
+                            Text("/100")
+                                .font(Theme.Fonts.caption(10))
+                                .foregroundStyle(Theme.Colors.espressoLight)
+                        }
+                        ScoreBar(score: s, width: 56)
+                    }
+                }
+                .padding(Theme.Spacing.md)
+                .background(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Theme.Colors.espressoLight.opacity(0.28), lineWidth: 1)
+                )
+            } else {
+                Text("No logs yet")
+                    .font(Theme.Fonts.bodyBold(15))
+                    .foregroundStyle(Theme.Colors.espressoMid)
+                    .padding(.vertical, 6)
+            }
+        }
+        .padding(Theme.Spacing.md)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .glassSurface(radius: Theme.Radius.large)
+    }
+
+    private func timeString(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "h:mm a"
+        return f.string(from: date).lowercased()
+    }
+
+    private func dayString(_ date: Date) -> String {
+        let cal = Calendar.current
+        if cal.isDateInToday(date)     { return "Today" }
+        if cal.isDateInYesterday(date) { return "Yesterday" }
+        let f = DateFormatter()
+        f.dateFormat = "EEE, MMM d"
+        return f.string(from: date)
+    }
+}
+
+/// Score → color band. Reused across LogCard and last log line.
+func scoreBandColor(_ score: Int) -> Color {
+    if score >= 70 { return Theme.Colors.dataGreen }
+    if score >= 40 { return Theme.Colors.dataYellow }
+    return Theme.Colors.dataPink
+}
+
+/// Proportional score bar — gray track + colored fill = score percent.
+struct ScoreBar: View {
+    let score: Int
+    var width: CGFloat = 56
+    var height: CGFloat = 4
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            Capsule()
+                .fill(Theme.Colors.neutral200.opacity(0.6))
+                .frame(width: width, height: height)
+            Capsule()
+                .fill(scoreBandColor(score))
+                .frame(width: width * CGFloat(max(0, min(100, score))) / 100, height: height)
+        }
+    }
+}
+
+// MARK: - Green Zone Calendar Card (Duolingo-style: stat boxes + calendar only)
+
+struct GreenZoneCalendarCard: View {
+    @ObservedObject var userVM: UserViewModel
+    @Binding var selectedMonth: Date
+    let onDayTap: (Date) -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+
+            // Inline header — small leaf + GREEN ZONE on top line, "N day streak" below. % far right.
+            HStack(alignment: .top, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        GreenZoneLeaf(size: 16)
+                        Text("GREEN ZONE")
+                            .font(Theme.Fonts.label(11))
+                            .tracking(1.3)
+                            .foregroundStyle(Theme.Colors.espressoLight)
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Text("\(userVM.greenZoneStreak)")
+                            .font(Theme.Fonts.hero(28))
+                            .foregroundStyle(Theme.Colors.espresso)
+                            .contentTransition(.numericText())
+                        Text("day streak")
+                            .font(Theme.Fonts.bodyBold(13))
+                            .foregroundStyle(Theme.Colors.espressoMid)
+                    }
+                }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 1) {
+                    Text("\(userVM.greenZone30DayPercentage)%")
+                        .font(Theme.Fonts.hero(22))
+                        .foregroundStyle(Theme.Colors.dataGreen)
+                        .contentTransition(.numericText())
+                    Text("THIS MONTH")
+                        .font(Theme.Fonts.label(9))
+                        .tracking(1.0)
+                        .foregroundStyle(Theme.Colors.espressoLight)
+                }
+            }
+
+            // Month navigator
+            HStack {
+                Button { previousMonth() } label: { chevron("chevron.left") }
+                Spacer()
+                Text(monthTitle)
+                    .font(Theme.Fonts.label(11))
+                    .tracking(1.5)
+                    .foregroundStyle(Theme.Colors.espresso)
+                    .textCase(.uppercase)
+                Spacer()
+                Button { nextMonth() } label: { chevron("chevron.right") }
+            }
+            .padding(.top, 18)
+
+            // Weekday labels
+            HStack(spacing: 0) {
+                ForEach(["S","M","T","W","T","F","S"], id: \.self) { l in
+                    Text(l)
+                        .font(Theme.Fonts.label(9))
+                        .foregroundStyle(Theme.Colors.espressoLight.opacity(0.7))
+                        .frame(maxWidth: .infinity)
+                }
+            }
+            .padding(.top, 12)
+
+            // Calendar grid
+            let days = monthDays(for: selectedMonth)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 0), count: 7), spacing: 6) {
+                ForEach(Array(days.enumerated()), id: \.element.id) { idx, day in
+                    let isGreen = !day.ignored && userVM.isGreenZoneDay(day.date)
+                    let leftConnected = isGreen && idx > 0
+                        && !days[idx - 1].ignored
+                        && userVM.isGreenZoneDay(days[idx - 1].date)
+                    let rightConnected = isGreen && idx < days.count - 1
+                        && !days[idx + 1].ignored
+                        && userVM.isGreenZoneDay(days[idx + 1].date)
+                    GreenZoneCalendarDayCell(
+                        date: day.date,
+                        isIgnored: day.ignored,
+                        isGreenZone: isGreen,
+                        hasLogs: userVM.dayHasLogs(day.date),
+                        leftConnected: leftConnected,
+                        rightConnected: rightConnected,
+                        isSelected: false,
+                        onTap: {
+                            guard !day.ignored else { return }
+                            Theme.Haptics.light()
+                            onDayTap(day.date)
+                        }
+                    )
+                }
+            }
+            .padding(.top, 6)
+        }
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        .glassSurface(radius: Theme.Radius.large)
+    }
+
+    private var monthTitle: String {
+        let f = DateFormatter()
+        f.dateFormat = "MMMM yyyy"
+        return f.string(from: selectedMonth)
+    }
+
+    private func previousMonth() {
+        Theme.Haptics.light()
+        if let m = Calendar.current.date(byAdding: .month, value: -1, to: selectedMonth) {
+            withAnimation(Theme.Animation.spring) { selectedMonth = m }
+        }
+    }
+
+    private func nextMonth() {
+        Theme.Haptics.light()
+        if let m = Calendar.current.date(byAdding: .month, value: 1, to: selectedMonth) {
+            withAnimation(Theme.Animation.spring) { selectedMonth = m }
+        }
+    }
+
+    private func chevron(_ name: String) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 11, weight: .bold))
+            .foregroundStyle(Theme.Colors.espresso)
+            .frame(width: 26, height: 26)
+            .background(Circle().fill(Color.white.opacity(0.55)))
+            .overlay(Circle().stroke(Color.white.opacity(0.6), lineWidth: 1))
+    }
+
+    private func monthDays(for month: Date) -> [TempDay] {
+        var days: [TempDay] = []
+        let cal = Calendar.current
+        let f = DateFormatter(); f.dateFormat = "dd"
+        guard let range = cal.range(of: .day, in: .month, for: month)?.compactMap({
+            value -> Date? in cal.date(byAdding: .day, value: value - 1, to: month)
+        }) else { return days }
+        let firstWeekday = cal.component(.weekday, from: range.first!)
+        for index in Array(0..<firstWeekday - 1).reversed() {
+            guard let d = cal.date(byAdding: .day, value: -index - 1, to: range.first!) else { return days }
+            days.append(.init(shortSymbol: f.string(from: d), date: d, ignored: true))
+        }
+        for d in range {
+            days.append(.init(shortSymbol: f.string(from: d), date: d))
+        }
+        let lastWeekday = 7 - cal.component(.weekday, from: range.last!)
+        if lastWeekday > 0 {
+            for index in 0..<lastWeekday {
+                guard let d = cal.date(byAdding: .day, value: index + 1, to: range.last!) else { return days }
+                days.append(.init(shortSymbol: f.string(from: d), date: d, ignored: true))
+            }
+        }
+        return days
+    }
+}
+
+// MARK: - Stat Mini Box (Duolingo-style stat container)
+
+struct StatMiniBox: View {
+    let iconBuilder: () -> AnyView
+    let value: String
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 10) {
+            iconBuilder()
+            VStack(alignment: .leading, spacing: 0) {
+                Text(value)
+                    .font(Theme.Fonts.bodyBold(15))
+                    .foregroundStyle(Theme.Colors.espresso)
+                    .contentTransition(.numericText())
+                Text(label)
+                    .font(Theme.Fonts.caption(11))
+                    .foregroundStyle(Theme.Colors.espressoLight)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.white.opacity(0.55))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(Color.white.opacity(0.6), lineWidth: 1)
+                )
+        )
+    }
+}
+
+// MARK: - Calendar day cell — Duolingo pill style
+
+private struct GreenZoneCalendarDayCell: View {
+    let date: Date
+    let isIgnored: Bool
+    let isGreenZone: Bool
+    let hasLogs: Bool
+    let leftConnected: Bool
+    let rightConnected: Bool
+    let isSelected: Bool
+    let onTap: () -> Void
+
+    private var dayNum: String {
+        let f = DateFormatter(); f.dateFormat = "d"
+        return f.string(from: date)
+    }
+
+    private var corners: (lead: CGFloat, trail: CGFloat) {
+        let r: CGFloat = 16
+        return (leftConnected ? 0 : r, rightConnected ? 0 : r)
+    }
+
+    private var isToday: Bool {
+        Calendar.current.isDateInToday(date)
+    }
+
+    private var numberColor: Color {
+        if isIgnored { return Theme.Colors.espressoLight.opacity(0.4) }
+        if isToday && isGreenZone { return .white }
+        return Theme.Colors.espresso
+    }
+
+    var body: some View {
+        Button(action: onTap) {
+            ZStack {
+                // Light green streak pill bg (non-today green days)
+                if isGreenZone && !isToday {
+                    UnevenRoundedRectangle(
+                        topLeadingRadius: corners.lead,
+                        bottomLeadingRadius: corners.lead,
+                        bottomTrailingRadius: corners.trail,
+                        topTrailingRadius: corners.trail,
+                        style: .continuous
+                    )
+                    .fill(Theme.Colors.dataGreen.opacity(0.28))
+                    .frame(height: 32)
+                    .padding(.leading, leftConnected ? 0 : 3)
+                    .padding(.trailing, rightConnected ? 0 : 3)
+                }
+
+                // Today: solid green fill if also green zone
+                if isToday && isGreenZone {
+                    Circle()
+                        .fill(Theme.Colors.dataGreen)
+                        .frame(width: 32, height: 32)
+                }
+
+                // Today: ALWAYS a black ring (sits on top of fill if any)
+                if isToday && !isIgnored {
+                    Circle()
+                        .strokeBorder(Theme.Colors.espresso, lineWidth: 2)
+                        .frame(width: 32, height: 32)
+                }
+
+                // Selected non-today indicator
+                if isSelected && !isToday {
+                    Circle()
+                        .strokeBorder(Theme.Colors.espresso, lineWidth: 1.5)
+                        .frame(width: 32, height: 32)
+                }
+
+                Text(dayNum)
+                    .font(Theme.Fonts.captionBold(11))
+                    .foregroundStyle(numberColor)
+            }
+            // Fixed row height so months with sparse data don't collapse —
+            // matches the 32pt pill/circle so dense and empty months align.
+            .frame(maxWidth: .infinity)
+            .frame(height: 36)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .disabled(isIgnored)
+    }
+}
+
+// MARK: - Recent Logs (last 3 LogCards across all time)
+
+struct RecentLogsSection: View {
+    let userVM: UserViewModel
+
+    private var logs: [Log] {
+        Array(userVM.logHistory.sorted { $0.timestamp > $1.timestamp }.prefix(3))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Recent Logs")
+                    .font(Theme.Fonts.heading(18))
+                    .foregroundStyle(Theme.Colors.espresso)
+                Spacer()
+            }
+
+            if logs.isEmpty {
+                HStack(spacing: 8) {
+                    Image(systemName: "sparkles")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundStyle(Theme.Colors.espressoLight)
+                    Text("Your first log will show up here")
+                        .font(Theme.Fonts.caption(13))
+                        .foregroundStyle(Theme.Colors.espressoLight)
+                    Spacer()
+                }
+                .padding(.vertical, 8)
+            } else {
+                VStack(spacing: 10) {
+                    ForEach(logs) { log in
+                        LogCard(log: log)
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Day Logs Modal (opened by tapping a calendar day)
+
+struct DayLogsIdentifier: Identifiable {
+    let date: Date
+    var id: String {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: date)
+    }
+}
+
+struct DayLogsModal: View {
+    let date: Date
+    let userVM: UserViewModel
+
+    private var logs: [Log] {
+        let cal = Calendar.current
+        return userVM.logHistory
+            .filter { cal.isDate($0.timestamp, inSameDayAs: date) }
+            .sorted { $0.timestamp > $1.timestamp }
+    }
+
+    private var dateTitle: String {
+        let cal = Calendar.current
+        if cal.isDateInToday(date)     { return "Today" }
+        if cal.isDateInYesterday(date) { return "Yesterday" }
+        let f = DateFormatter()
+        f.dateFormat = "EEEE, MMM d"
+        return f.string(from: date)
     }
 
     var body: some View {
@@ -508,22 +732,33 @@ struct TodaysReadModal: View {
 
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("TODAY'S READ")
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("LOGS")
                             .font(Theme.Fonts.label(10))
-                            .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.55))
                             .tracking(1.5)
-
-                        Text(headline)
+                            .foregroundStyle(Theme.Colors.espressoLight)
+                        Text(dateTitle)
                             .font(Theme.Fonts.title(26))
-                            .foregroundStyle(Theme.Colors.textOnGlass)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .foregroundStyle(Theme.Colors.espresso)
                     }
                     .padding(.top, Theme.Spacing.md)
 
-                    VStack(alignment: .leading, spacing: 12) {
-                        ForEach(insights.prefix(6)) { insight in
-                            AdvancedInsightCardGlass(insight: insight)
+                    if logs.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "sparkles")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundStyle(Theme.Colors.espressoLight)
+                            Text("No logs recorded this day")
+                                .font(Theme.Fonts.caption(13))
+                                .foregroundStyle(Theme.Colors.espressoLight)
+                            Spacer()
+                        }
+                        .padding(.vertical, 10)
+                    } else {
+                        VStack(spacing: 10) {
+                            ForEach(logs) { log in
+                                LogCard(log: log)
+                            }
                         }
                     }
 
@@ -536,53 +771,12 @@ struct TodaysReadModal: View {
     }
 }
 
-// MARK: - Inline Timeframe Picker (text-only, no pill)
-
-struct InlineTimeframePicker: View {
-    @Binding var selected: String
-    private let options = [("Today", "TODAY"), ("Week", "WEEK"), ("Month", "MONTH")]
-
-    var body: some View {
-        HStack(spacing: 18) {
-            ForEach(Array(options.enumerated()), id: \.element.1) { index, opt in
-                let (label, value) = opt
-                Button {
-                    Theme.Haptics.selection()
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                        selected = value
-                    }
-                } label: {
-                    Text(label)
-                        .font(selected == value
-                              ? Theme.Fonts.captionBold(15)
-                              : Theme.Fonts.caption(15))
-                        .foregroundStyle(selected == value
-                                         ? Theme.Colors.textOnMesh
-                                         : Theme.Colors.textOnMesh.opacity(0.38))
-                }
-                .buttonStyle(.plain)
-
-                if index < options.count - 1 {
-                    Circle()
-                        .fill(Theme.Colors.textOnMesh.opacity(0.3))
-                        .frame(width: 3, height: 3)
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Legacy alias
-
-typealias HomeTimeframePicker = InlineTimeframePicker
-
 // MARK: - Preview
 
 #Preview {
     ZStack {
-        MeshBackground()
+        CreamBackground()
         HomeView(
-            selectedTimeframe: .constant("WEEK"),
             showProfile: .constant(false),
             showLogOptions: .constant(false)
         )

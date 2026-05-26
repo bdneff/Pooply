@@ -2,14 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSCameraUsageDescription</key>
-	<string>Pooply uses your camera to analyze and score your stool for health insights.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Pooply needs access to your photo library so you can select images for analysis.</string>
-	<key>NSUserTrackingUsageDescription</key>
-	<string>This helps us understand which content brought you to Pooply and improve your experience.</string>
-	<key>UIUserInterfaceStyle</key>
-	<string>Dark</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Nunito-Regular.ttf</string>

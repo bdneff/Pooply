@@ -2,7 +2,9 @@
 //  OnboardingView.swift
 //  Pooply
 //
-//  Single-screen onboarding with animated content transitions
+//  Unified onboarding: Welcome → 12-step questionnaire (profile + baseline) →
+//  Auth → Completion. One progress bar covers all 12 questions. App logo sits
+//  centered above the bar; "Step X of Y" text sits below it.
 //
 
 import SwiftUI
@@ -16,46 +18,32 @@ struct OnboardingView: View {
 
     var body: some View {
         ZStack {
-            // Background
-            backgroundGradient
+            MeshBackground()
                 .ignoresSafeArea()
 
             VStack(spacing: 0) {
-                // MARK: - Questionnaire Progress Header
                 if state.showProgressBar {
                     OnboardingProgressHeader(state: state)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
 
-                // MARK: - Main Content
                 ZStack {
                     switch state.phase {
                     case .welcome:
-                        AnimatedBenefitsIntro(state: state)
+                        WelcomeContent(state: state)
                             .transition(.opacity)
-
-                    case .features:
-                        // Dead branch — OnboardingState.next() now skips .features,
-                        // but route it through the animated intro just in case.
-                        AnimatedBenefitsIntro(state: state)
-                            .transition(.opacity)
-
-                    case .auth:
-                        AuthContent(state: state)
-                            .transition(slideTransition)
 
                     case .inviteCode:
                         InviteCodeContent(state: state)
                             .transition(slideTransition)
 
-                    case .profile:
-                        ProfileStepContent(state: state)
-                            .id("profile-\(state.profileStepIndex)")
+                    case .questions:
+                        QuestionStepContent(state: state)
+                            .id("step-\(state.stepIndex)")
                             .transition(slideTransition)
 
-                    case .questionnaire:
-                        QuestionnaireContent(state: state)
-                            .id("question-\(state.questionIndex)")
+                    case .auth:
+                        AuthContent(state: state)
                             .transition(slideTransition)
 
                     case .completion:
@@ -73,32 +61,10 @@ struct OnboardingView: View {
         .gesture(swipeGesture)
     }
 
-    // MARK: - Background
-
-    private var backgroundGradient: some View {
-        Group {
-            // Everything past the animated intro lives on the blue mesh.
-            switch state.phase {
-            case .welcome, .features:
-                MeshBackground() // (the intro overlays this with its own bg)
-            case .profile, .questionnaire, .auth, .inviteCode, .completion:
-                MeshBackground()
-            }
-        }
-        .animation(.easeInOut(duration: 0.5), value: state.phase)
-    }
-
     // MARK: - Transitions
 
     private var slideTransition: AnyTransition {
-        // Features use crossfade+scale so images/glows don't slide out of sync
-        if state.phase == .features {
-            return .asymmetric(
-                insertion: .opacity.combined(with: .scale(scale: 0.96)),
-                removal: .opacity.combined(with: .scale(scale: 0.96))
-            )
-        }
-        return .asymmetric(
+        .asymmetric(
             insertion: .move(edge: state.slideDirection == .trailing ? .trailing : .leading).combined(with: .opacity),
             removal: .move(edge: state.slideDirection == .trailing ? .leading : .trailing).combined(with: .opacity)
         )
@@ -112,15 +78,11 @@ struct OnboardingView: View {
                 let horizontal = value.translation.width
 
                 if horizontal > 100 && state.phase != .welcome {
-                    // Swipe right - go back
-                    let impact = UIImpactFeedbackGenerator(style: .medium)
-                    impact.impactOccurred()
+                    Theme.Haptics.medium()
                     state.back()
                 } else if horizontal < -100 && state.phase != .completion {
-                    // Swipe left - go forward (if allowed)
                     if canSwipeForward() {
-                        let impact = UIImpactFeedbackGenerator(style: .medium)
-                        impact.impactOccurred()
+                        Theme.Haptics.medium()
                         state.next()
                     }
                 }
@@ -131,94 +93,125 @@ struct OnboardingView: View {
         switch state.phase {
         case .welcome:
             return true
-        case .features:
-            return true
-        case .auth:
-            return false // Must complete auth via buttons
         case .inviteCode:
-            return false // Must use buttons
-        case .profile:
-            if state.profileStepIndex == 0 { return !state.name.isEmpty }
-            return true
-        case .questionnaire:
-            return true // Allow skipping questions
+            // Mandatory gate — only advance once a valid code has been entered.
+            return state.inviteCodeRedeemed
+        case .questions:
+            guard let step = state.currentStep else { return false }
+            return state.isStepAnswered(step) || step.allowSkip
+        case .auth:
+            return false
         case .completion:
             return false
         }
     }
 }
 
-// MARK: - Progress Header
+// MARK: - Answered helper
+
+extension OnboardingState {
+    func isStepAnswered(_ step: OnboardingStep) -> Bool {
+        switch step.type {
+        case .textInput:
+            // Only "name" is text — must be non-empty.
+            if step.id == "name" { return !name.trimmingCharacters(in: .whitespaces).isEmpty }
+            return !(answers[step.id]?.first?.isEmpty ?? true)
+        case .singleSelect:
+            if step.id == "sex" { return !gender.isEmpty }
+            return !(answers[step.id]?.isEmpty ?? true)
+        case .multiSelect:
+            return !(answers[step.id]?.isEmpty ?? true)
+        case .agePicker:
+            return true // wheel always has a value
+        case .weightPicker:
+            return true
+        }
+    }
+}
+
+// MARK: - Progress Header (logo → bar → step text → back/skip)
 
 struct OnboardingProgressHeader: View {
     @ObservedObject var state: OnboardingState
 
     private var stepText: String {
-        switch state.phase {
-        case .features:
-            return "\(state.featureIndex + 1) of \(OnboardingState.featureCount)"
-        case .profile:
-            return "\(state.profileStepIndex + 1) of \(OnboardingState.profileStepCount)"
-        case .questionnaire:
-            return "\(state.questionIndex + 1) of \(state.questions.count)"
-        default:
-            return ""
-        }
+        guard state.phase == .questions else { return "" }
+        return "Step \(state.stepIndex + 1) of \(OnboardingState.stepCount)"
+    }
+
+    private var currentAllowsSkip: Bool {
+        state.currentStep?.allowSkip ?? false
     }
 
     var body: some View {
-        VStack(spacing: Theme.Spacing.md) {
-            HStack {
-                // Back button
+        VStack(spacing: Theme.Spacing.sm) {
+            // Row 1 — chevron (left), "Step X of Y" (center), skip (right)
+            HStack(spacing: 0) {
                 Button(action: {
-                    let impact = UIImpactFeedbackGenerator(style: .medium)
-                    impact.impactOccurred()
+                    Theme.Haptics.medium()
                     state.back()
                 }) {
                     Image(systemName: "chevron.left")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundStyle(Theme.Colors.textSecondary)
-                        .frame(width: 44, height: 44)
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.72))
+                        .frame(width: 36, height: 36)
                 }
 
                 Spacer()
 
                 Text(stepText)
-                    .font(Theme.Fonts.caption())
-                    .foregroundStyle(Theme.Colors.textTertiary)
+                    .font(Theme.Fonts.captionBold(13))
+                    .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.72))
                     .contentTransition(.numericText())
 
                 Spacer()
 
-                // Skip button (features only)
-                if state.phase == .features {
+                // Skip button mirrors the back chevron's footprint so the step
+                // text stays perfectly centered.
+                if currentAllowsSkip {
                     Button(action: {
-                        state.skipToProfile()
+                        Theme.Haptics.light()
+                        state.skipCurrent()
                     }) {
                         Text("Skip")
-                            .font(Theme.Fonts.captionBold())
-                            .foregroundStyle(Theme.Colors.textTertiary)
+                            .font(Theme.Fonts.captionBold(13))
+                            .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.72))
+                            .frame(minWidth: 36, minHeight: 36)
+                            .padding(.horizontal, 4)
                     }
-                    .frame(width: 44, height: 44)
                 } else {
-                    Color.clear.frame(width: 44, height: 44)
+                    Color.clear.frame(width: 36, height: 36)
                 }
             }
 
-            // Progress bar
-            GeometryReader { geometry in
-                ZStack(alignment: .leading) {
-                    Capsule()
-                        .fill(Theme.Colors.neutralLight.opacity(0.3))
-                        .frame(height: 6)
+            // Row 2 — Lee mascot (left) + progress bar (fills remaining width)
+            HStack(spacing: 10) {
+                MascotCircle(size: 40)
+                    .offset(x: -2)
 
-                    Capsule()
-                        .fill(Theme.Colors.primary)
-                        .frame(width: geometry.size.width * state.progress, height: 6)
-                        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: state.progress)
+                GeometryReader { geometry in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.45))
+                            .frame(height: 10)
+
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [
+                                        Theme.Colors.babyBlue300,
+                                        Theme.Colors.babyBlue400
+                                    ],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: max(10, geometry.size.width * state.progress), height: 10)
+                            .animation(.spring(response: 0.4, dampingFraction: 0.85), value: state.progress)
+                    }
                 }
+                .frame(height: 10)
             }
-            .frame(height: 6)
         }
         .padding(.horizontal, Theme.Spacing.screenHorizontal)
         .padding(.top, Theme.Spacing.sm)
@@ -238,25 +231,25 @@ struct WelcomeContent: View {
             Spacer()
 
             // Mascot
-            MascotCircle(size: 160)
+            MascotCircle(size: 132)
                 .scaleEffect(appeared ? 1 : 0.8)
                 .opacity(appeared ? 1 : 0)
+                .offset(y: 16)
 
-            Spacer().frame(height: Theme.Spacing.lg)
+//            Spacer().frame(height: Theme.Spacing.xs)
 
-            // Title + copy
             VStack(spacing: Theme.Spacing.xs) {
                 Text("Pooply")
-                    .font(.custom("Nunito-Bold", size: 36))
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .font(.custom("PlusJakartaSans-ExtraBold", size: 36))
+                    .foregroundStyle(Theme.Colors.textOnMesh)
 
                 Text("Your Gut Health Companion")
                     .font(Theme.Fonts.heading())
-                    .foregroundStyle(Theme.Colors.textSecondary)
+                    .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.75))
 
-                Text("AI-powered stool tracking for\na happier, healthier gut")
+                Text("AI-powered stool tracking for\na happier, healthier gut.")
                     .font(Theme.Fonts.body())
-                    .foregroundStyle(Theme.Colors.textTertiary)
+                    .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.6))
                     .multilineTextAlignment(.center)
                     .padding(.top, Theme.Spacing.xs)
             }
@@ -265,10 +258,8 @@ struct WelcomeContent: View {
 
             Spacer()
 
-            // Get Started button
             Button(action: {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
+                Theme.Haptics.medium()
                 state.next()
             }) {
                 Text("Get Started")
@@ -291,168 +282,7 @@ struct WelcomeContent: View {
     }
 }
 
-// MARK: - Feature Slide Content (Full-bleed wallpaper with floating particles)
-
-struct FeatureSlideContent: View {
-    @ObservedObject var state: OnboardingState
-
-    @State private var showContent = false
-    @State private var particlePhase: CGFloat = 0
-
-    private var benefit: GutBenefit {
-        GutBenefit.benefits[state.featureIndex]
-    }
-
-    // Accent color per slide for the floating particles
-    private var accentColor: Color {
-        switch state.featureIndex {
-        case 0: return Color(hex: "#B388FF")  // Serotonin — lavender
-        case 1: return Color(hex: "#3B82F6")  // Brain — blue
-        case 2: return Color(hex: "#00E89D")  // Energy — mint
-        case 3: return Color(hex: "#FFB800")  // Immunity — amber
-        default: return Color.white
-        }
-    }
-
-    var body: some View {
-        ZStack {
-            // Full-bleed wallpaper image
-            Image(benefit.imageName)
-                .resizable()
-                .scaledToFill()
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .clipped()
-                .ignoresSafeArea()
-                .opacity(showContent ? 1 : 0)
-                .scaleEffect(showContent ? 1 : 1.05)
-
-            // Floating particles overlay (simulates animation on static image)
-            FloatingParticles(color: accentColor, count: 12)
-                .opacity(showContent ? 0.6 : 0)
-
-            // Bottom gradient for text readability
-            VStack {
-                Spacer()
-                LinearGradient(
-                    colors: [.clear, Color.black.opacity(0.7), Color.black.opacity(0.9)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .frame(height: 320)
-            }
-            .ignoresSafeArea()
-
-            // Content overlay
-            VStack(spacing: 0) {
-                Spacer()
-
-                // Copy section
-                VStack(spacing: Theme.Spacing.sm) {
-                    Text(benefit.title)
-                        .font(Theme.Fonts.title(32))
-                        .foregroundStyle(Color.white)
-                        .multilineTextAlignment(.center)
-                        .shadow(color: .black.opacity(0.5), radius: 8, y: 2)
-
-                    Text(benefit.description)
-                        .font(Theme.Fonts.body())
-                        .foregroundStyle(Color.white.opacity(0.8))
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(3)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.horizontal, Theme.Spacing.screenHorizontal + 4)
-                .opacity(showContent ? 1 : 0)
-                .offset(y: showContent ? 0 : 12)
-
-                Spacer().frame(height: Theme.Spacing.xl)
-
-                // Continue button
-                Button(action: {
-                    let impact = UIImpactFeedbackGenerator(style: .medium)
-                    impact.impactOccurred()
-                    state.next()
-                }) {
-                    Text(state.featureIndex == OnboardingState.featureCount - 1 ? "Continue" : "Next")
-                        .font(Theme.Fonts.bodyBold())
-                }
-                .elevatedButtonStyle(color: accentColor)
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-                // Page dots
-                HStack(spacing: 8) {
-                    ForEach(0..<OnboardingState.featureCount, id: \.self) { index in
-                        Capsule()
-                            .fill(index == state.featureIndex ? Color.white : Color.white.opacity(0.3))
-                            .frame(width: index == state.featureIndex ? 24 : 8, height: 8)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: state.featureIndex)
-                    }
-                }
-                .padding(.top, Theme.Spacing.md)
-                .padding(.bottom, Theme.Spacing.xxl)
-            }
-        }
-        .onAppear {
-            Analytics.logEvent("onboarding_feature", parameters: [
-                "feature_index": state.featureIndex,
-                "feature_title": benefit.title
-            ])
-            showContent = false
-            withAnimation(.easeOut(duration: 0.4)) {
-                showContent = true
-            }
-        }
-    }
-}
-
-// MARK: - Floating Particles (subtle animation overlay for onboarding)
-
-struct FloatingParticles: View {
-    let color: Color
-    let count: Int
-
-    @State private var animate = false
-
-    var body: some View {
-        GeometryReader { geo in
-            ForEach(0..<count, id: \.self) { i in
-                let seed = CGFloat(i)
-                let size = CGFloat.random(in: 3...8)
-                let startX = (seed / CGFloat(count)) * geo.size.width
-                let startY = CGFloat.random(in: 0...geo.size.height)
-                let duration = Double.random(in: 4...8)
-                let delay = Double.random(in: 0...3)
-
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            colors: [color, color.opacity(0.2)],
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: size
-                        )
-                    )
-                    .frame(width: size, height: size)
-                    .shadow(color: color.opacity(0.4), radius: 4)
-                    .position(
-                        x: startX + (animate ? CGFloat.random(in: -20...20) : 0),
-                        y: startY + (animate ? -40 : 0)
-                    )
-                    .opacity(animate ? 0.8 : 0.2)
-                    .animation(
-                        .easeInOut(duration: duration)
-                        .repeatForever(autoreverses: true)
-                        .delay(delay),
-                        value: animate
-                    )
-            }
-        }
-        .onAppear { animate = true }
-        .allowsHitTesting(false)
-    }
-}
-
-// MARK: - Survey Header (mascot removed for vertical room)
+// MARK: - Survey Header (question title + subtitle)
 
 struct SurveyMascotHeader: View {
     let title: String
@@ -478,132 +308,121 @@ struct SurveyMascotHeader: View {
     }
 }
 
-// MARK: - Profile Step Content (Individual pages like questionnaire)
+// MARK: - Unified Question Step
 
-struct ProfileStepContent: View {
+struct QuestionStepContent: View {
     @ObservedObject var state: OnboardingState
     @FocusState private var nameFieldFocused: Bool
 
+    /// Local working state for multi-select. We mirror to `state.answers` on Continue.
+    @State private var multiSelection: Set<String> = []
+
+    private var step: OnboardingStep {
+        // currentStep can be nil only on the boundary; falling back to a
+        // dummy keeps SwiftUI from crashing during the dissolve.
+        state.currentStep ?? state.steps[0]
+    }
+
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
-                SurveyMascotHeader(
-                    title: stepTitle,
-                    subtitle: stepSubtitle
-                )
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.top, Theme.Spacing.lg)
+        VStack(alignment: .leading, spacing: 0) {
+            contentArea
 
-                if state.profileStepIndex != 0 {
-                    Button(action: { state.next() }) {
-                        Text("Skip this step")
-                            .font(Theme.Fonts.caption())
-                            .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.62))
-                    }
-                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                }
-
-                // Step-specific input
-                stepContent
-                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-                // Bottom spacer keeps the last input above the floating button
-                // even before the keyboard inset is applied.
-                Spacer().frame(height: 24)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .scrollDismissesKeyboard(.interactively)
-        // Continue floats in the safe-area inset, so the keyboard pushes the
-        // entire button group up cleanly without crushing the input.
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            Button(action: {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-                nameFieldFocused = false
-                state.next()
-            }) {
+            Button(action: handleContinue) {
                 Text("Continue")
                     .font(Theme.Fonts.bodyBold())
             }
-            .elevatedButtonStyle(color: Theme.Colors.neutral900, height: 56)
+            .elevatedButtonStyle(
+                color: continueDisabled ? Theme.Colors.neutral400 : Theme.Colors.neutral900,
+                height: 56
+            )
             .animation(.easeInOut(duration: 0.2), value: continueDisabled)
             .disabled(continueDisabled)
-            .opacity(continueDisabled ? 0.55 : 1.0)
+            .opacity(continueDisabled ? 0.6 : 1)
             .padding(.horizontal, Theme.Spacing.screenHorizontal)
             .padding(.top, Theme.Spacing.md)
             .padding(.bottom, Theme.Spacing.lg)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         .onAppear {
-            Analytics.logEvent("onboarding_profile_\(stepEventName)", parameters: [
-                "step_index": state.profileStepIndex
+            Analytics.logEvent("onboarding_step", parameters: [
+                "step_index": state.stepIndex,
+                "step_id": step.id
             ])
-            if state.profileStepIndex == 0 {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            syncLocalState()
+            if step.type == .textInput {
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
                     nameFieldFocused = true
                 }
             }
         }
-    }
-
-    // MARK: - Step Data
-
-    private var stepEventName: String {
-        switch state.profileStepIndex {
-        case 0: return "name"
-        case 1: return "gender"
-        case 2: return "age"
-        case 3: return "weight"
-        default: return "unknown"
+        .onChange(of: state.stepIndex) { _, _ in
+            syncLocalState()
         }
     }
 
-    private var stepTitle: String {
-        switch state.profileStepIndex {
-        case 0: return "What's your name?"
-        case 1: return "What's your gender?"
-        case 2: return "How old are you?"
-        case 3: return "What's your weight?"
-        default: return ""
-        }
-    }
+    // MARK: - Layout
 
-    private var stepSubtitle: String? {
-        switch state.profileStepIndex {
-        case 0: return "This helps us personalize your experience"
-        case 1: return "This helps us provide better insights"
-        case 2: return nil
-        case 3: return nil
-        default: return nil
-        }
-    }
-
-    private var continueDisabled: Bool {
-        switch state.profileStepIndex {
-        case 0: return state.name.isEmpty
-        default: return false
+    /// True for steps with long option lists that should scroll. False for
+    /// "simple" steps (name, age, weight) — those center vertically.
+    private var needsScroll: Bool {
+        switch step.type {
+        case .singleSelect, .multiSelect: return true
+        case .textInput, .agePicker, .weightPicker: return false
         }
     }
 
     @ViewBuilder
-    private var stepContent: some View {
-        switch state.profileStepIndex {
-        case 0:
-            nameStep
-        case 1:
-            genderStep
-        case 2:
-            ageStep
-        case 3:
-            weightStep
-        default:
-            EmptyView()
+    private var contentArea: some View {
+        if needsScroll {
+            // Title pinned at top; options scroll independently so the view
+            // doesn't stretch when there are 6–7 choices.
+            VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
+                SurveyMascotHeader(title: step.title, subtitle: step.subtitle)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, Theme.Spacing.lg)
+
+                ScrollView(.vertical, showsIndicators: false) {
+                    stepInput
+                        .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                        .padding(.bottom, Theme.Spacing.md)
+                }
+            }
+        } else {
+            // Simple, single-element steps (name / age / weight) — center the
+            // title + input between two flexible spacers.
+            VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
+                Spacer()
+
+                SurveyMascotHeader(title: step.title, subtitle: step.subtitle)
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+
+                stepInput
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+
+                Spacer()
+            }
         }
     }
 
-    // MARK: - Step Views
+    // MARK: - Step Inputs
 
-    private var nameStep: some View {
+    @ViewBuilder
+    private var stepInput: some View {
+        switch step.type {
+        case .textInput:
+            nameInput
+        case .singleSelect:
+            singleSelectOptions
+        case .multiSelect:
+            multiSelectOptions
+        case .agePicker:
+            agePicker
+        case .weightPicker:
+            weightPicker
+        }
+    }
+
+    private var nameInput: some View {
         TextField("Enter your name", text: $state.name)
             .font(Theme.Fonts.body())
             .foregroundStyle(Theme.Colors.textOnGlass)
@@ -617,24 +436,31 @@ struct ProfileStepContent: View {
             }
     }
 
-    private var genderStep: some View {
+    private var singleSelectOptions: some View {
         VStack(spacing: Theme.Spacing.sm) {
-            GenderOptionButton(title: "Female", isSelected: state.gender == "female") {
-                state.gender = "female"
-            }
-            GenderOptionButton(title: "Male", isSelected: state.gender == "male") {
-                state.gender = "male"
-            }
-            GenderOptionButton(title: "Non-binary", isSelected: state.gender == "non-binary") {
-                state.gender = "non-binary"
-            }
-            GenderOptionButton(title: "Prefer not to say", isSelected: state.gender == "other") {
-                state.gender = "other"
+            ForEach(step.options, id: \.self) { option in
+                AnswerOptionButton(
+                    title: option,
+                    isSelected: isSingleSelected(option),
+                    action: { selectSingle(option) }
+                )
             }
         }
     }
 
-    private var ageStep: some View {
+    private var multiSelectOptions: some View {
+        VStack(spacing: Theme.Spacing.sm) {
+            ForEach(step.options, id: \.self) { option in
+                AnswerOptionButton(
+                    title: option,
+                    isSelected: multiSelection.contains(option),
+                    action: { toggleMulti(option) }
+                )
+            }
+        }
+    }
+
+    private var agePicker: some View {
         Picker("Age", selection: $state.age) {
             ForEach(13..<100, id: \.self) { age in
                 Text("\(age) years").tag(age)
@@ -646,7 +472,7 @@ struct ProfileStepContent: View {
         .glassSurface(radius: Theme.Radius.medium)
     }
 
-    private var weightStep: some View {
+    private var weightPicker: some View {
         Picker("Weight", selection: $state.weight) {
             ForEach(Array(stride(from: 80.0, through: 400.0, by: 5.0)), id: \.self) { weight in
                 Text("\(Int(weight)) lbs").tag(weight)
@@ -657,114 +483,75 @@ struct ProfileStepContent: View {
         .frame(maxWidth: .infinity)
         .glassSurface(radius: Theme.Radius.medium)
     }
-}
 
-// MARK: - Questionnaire Content
+    // MARK: - Selection helpers
 
-struct QuestionnaireContent: View {
-    @ObservedObject var state: OnboardingState
-
-    @State private var selectedAnswers: Set<String> = []
-
-    private var question: OnboardingQuestion {
-        state.questions[state.questionIndex]
+    private func isSingleSelected(_ option: String) -> Bool {
+        if step.id == "sex" {
+            return state.gender == option
+        }
+        return state.answers[step.id]?.first == option
     }
 
-    var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            VStack(alignment: .leading, spacing: Theme.Spacing.lg) {
-                SurveyMascotHeader(
-                    title: question.question,
-                    subtitle: question.subtitle
-                )
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-                .padding(.top, Theme.Spacing.lg)
-
-                Button(action: {
-                    selectedAnswers = []
-                    state.next()
-                }) {
-                    Text("Skip this question")
-                        .font(Theme.Fonts.caption())
-                        .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.62))
-                }
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-                // Answer options
-                VStack(spacing: Theme.Spacing.sm) {
-                    ForEach(question.options, id: \.self) { option in
-                        AnswerOptionButton(
-                            title: option,
-                            isSelected: selectedAnswers.contains(option),
-                            action: {
-                                let impact = UIImpactFeedbackGenerator(style: .medium)
-                                impact.impactOccurred()
-
-                                withAnimation(Theme.Animation.spring) {
-                                    if question.allowsMultiple {
-                                        if selectedAnswers.contains(option) {
-                                            selectedAnswers.remove(option)
-                                        } else {
-                                            selectedAnswers.insert(option)
-                                        }
-                                    } else {
-                                        selectedAnswers = [option]
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-                .padding(.horizontal, Theme.Spacing.screenHorizontal)
-
-                // Bottom breathing room above the floating Continue button.
-                Spacer().frame(height: 24)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .bottom, spacing: 0) {
-            // PINNED Continue button — floats above the keyboard cleanly.
-            Button(action: {
-                let impact = UIImpactFeedbackGenerator(style: .medium)
-                impact.impactOccurred()
-                state.answers[question.id] = Array(selectedAnswers)
-                selectedAnswers = []
-                state.next()
-            }) {
-                Text("Continue")
-                    .font(Theme.Fonts.bodyBold())
-            }
-            .elevatedButtonStyle(
-                color: selectedAnswers.isEmpty ? Theme.Colors.neutral400 : Theme.Colors.neutral900,
-                height: 56
-            )
-            .animation(.easeInOut(duration: 0.2), value: selectedAnswers.isEmpty)
-            .disabled(selectedAnswers.isEmpty)
-            .padding(.horizontal, Theme.Spacing.screenHorizontal)
-            .padding(.top, Theme.Spacing.md)
-            .padding(.bottom, Theme.Spacing.lg)
-        }
-        .onAppear {
-            Analytics.logEvent("onboarding_question", parameters: [
-                "question_index": state.questionIndex,
-                "question_id": question.id
-            ])
-            // Load existing answers if going back
-            if let existing = state.answers[question.id] {
-                selectedAnswers = Set(existing)
+    private func selectSingle(_ option: String) {
+        Theme.Haptics.light()
+        withAnimation(Theme.Animation.spring) {
+            if step.id == "sex" {
+                state.gender = option
             } else {
-                selectedAnswers = []
+                state.answers[step.id] = [option]
             }
         }
-        .onChange(of: state.questionIndex) { _, _ in
-            // Reset when question changes
-            if let existing = state.answers[question.id] {
-                selectedAnswers = Set(existing)
+    }
+
+    private func toggleMulti(_ option: String) {
+        Theme.Haptics.light()
+        withAnimation(Theme.Animation.spring) {
+            // "None" is mutually-exclusive with the rest for the symptoms list.
+            if option == "None" {
+                multiSelection = multiSelection.contains("None") ? [] : ["None"]
             } else {
-                selectedAnswers = []
+                multiSelection.remove("None")
+                if multiSelection.contains(option) {
+                    multiSelection.remove(option)
+                } else {
+                    multiSelection.insert(option)
+                }
             }
         }
+        // Mirror selection back to OnboardingState so `continueDisabled` (which
+        // reads `state.answers`) recomputes immediately. Without this the
+        // Continue button stays disabled until the next tap cycle.
+        state.answers[step.id] = Array(multiSelection)
+    }
+
+    private func syncLocalState() {
+        if step.type == .multiSelect {
+            multiSelection = Set(state.answers[step.id] ?? [])
+        } else {
+            multiSelection = []
+        }
+    }
+
+    // MARK: - Continue
+
+    private var continueDisabled: Bool {
+        if step.allowSkip {
+            // Even on skippable steps, the Continue button requires a selection —
+            // the dedicated Skip control in the header handles the empty path.
+            return !state.isStepAnswered(step)
+        }
+        return !state.isStepAnswered(step)
+    }
+
+    private func handleContinue() {
+        Theme.Haptics.medium()
+        nameFieldFocused = false
+
+        if step.type == .multiSelect {
+            state.answers[step.id] = Array(multiSelection)
+        }
+        state.next()
     }
 }
 
@@ -783,7 +570,6 @@ struct CompletionContent: View {
         VStack(spacing: Theme.Spacing.xl) {
             Spacer()
 
-            // Animated checkmark
             ZStack {
                 Circle()
                     .stroke(Theme.Colors.primary.opacity(0.2), lineWidth: 6)
@@ -802,7 +588,6 @@ struct CompletionContent: View {
                     .opacity(showCheckmark ? 1 : 0)
             }
 
-            // Success text
             VStack(spacing: Theme.Spacing.sm) {
                 Text("You're All Set!")
                     .font(Theme.Fonts.title())
@@ -815,18 +600,16 @@ struct CompletionContent: View {
             .opacity(showContent ? 1 : 0)
             .offset(y: showContent ? 0 : 20)
 
-            // Profile summary
             HStack(spacing: Theme.Spacing.sm) {
                 CompletionStat(value: "\(state.age)", label: "Age")
                 CompletionStat(value: "\(Int(state.weight))", label: "Weight")
-                CompletionStat(value: state.gender.capitalized, label: "Gender")
+                CompletionStat(value: state.gender.isEmpty ? "—" : state.gender.capitalized, label: "Sex")
             }
             .padding(.horizontal, Theme.Spacing.screenHorizontal)
             .opacity(showContent ? 1 : 0)
 
             Spacer()
 
-            // Start button
             Button(action: completeOnboarding) {
                 Text("Start Tracking")
                     .font(Theme.Fonts.bodyBold())
@@ -849,23 +632,25 @@ struct CompletionContent: View {
             ringProgress = 1
         }
 
-        // Request push notification permission after 0.5s
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in
-                DispatchQueue.main.async {
-                    withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
-                        showCheckmark = true
-                    }
-                    let notification = UINotificationFeedbackGenerator()
-                    notification.notificationOccurred(.success)
+            // Notification permission prompt disabled for beta — re-enable by
+            // restoring the requestAuthorization wrapper around the animation
+            // block below.
+            // UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .badge, .sound]) { _, _ in
+            DispatchQueue.main.async {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+                    showCheckmark = true
+                }
+                let notification = UINotificationFeedbackGenerator()
+                notification.notificationOccurred(.success)
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        withAnimation(.easeOut(duration: 0.5)) {
-                            showContent = true
-                        }
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    withAnimation(.easeOut(duration: 0.5)) {
+                        showContent = true
                     }
                 }
             }
+            // }
         }
     }
 
@@ -873,37 +658,49 @@ struct CompletionContent: View {
         Analytics.logEvent("onboarding_completed", parameters: [
             "invite_code_used": state.inviteCodeRedeemed
         ])
-        let impact = UIImpactFeedbackGenerator(style: .medium)
-        impact.impactOccurred()
+        Theme.Haptics.medium()
 
-        // Create user
+        // Translate the dedicated profile fields into a User. The chat-baseline
+        // answers stay on `state.answers` keyed by step.id.
+        let resolvedGender: String = {
+            switch state.gender {
+            case "Female": return "female"
+            case "Male": return "male"
+            case "Non-binary": return "non-binary"
+            case "Prefer not to say": return "other"
+            default: return state.gender.lowercased()
+            }
+        }()
+
         let user = User(
             name: state.name,
             age: state.age,
             weight: state.weight,
-            gender: state.gender
+            gender: resolvedGender
         )
 
-        // Save to UserDefaults
         let service = UserDefaultsService.shared
         service.saveUser(user)
         service.questionnaireAnswers = state.answers
         service.hasCompletedOnboarding = true
         service.clearOnboardingProgress()
 
-        // Save to Firestore
         let answers = state.answers
         Task { try? await FirebaseService.shared.saveUserProfile(user, questionnaireAnswers: answers) }
 
-        // Grant invite access if code was redeemed
         if state.inviteCodeRedeemed {
             SubscriptionService.shared.grantInviteAccess()
+
+            // Now that the user is authenticated, record the redemption on the
+            // invite code doc (increments currentUses, appends userId).
+            let code = state.inviteCodeValue
+            if !code.isEmpty {
+                Task { try? await FirebaseService.shared.redeemInviteCode(code) }
+            }
         }
 
-        // Update UserViewModel
         userViewModel.user = user
 
-        // Trigger transition to main app
         withAnimation(.easeInOut(duration: 0.3)) {
             hasCompletedOnboarding = true
         }

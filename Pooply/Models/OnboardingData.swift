@@ -2,95 +2,185 @@
 //  OnboardingData.swift
 //  Pooply
 //
-//  Data models for onboarding questionnaire
+//  Unified onboarding model — profile fields and baseline-behavior questions
+//  live on one ordered list so they share a single progress bar.
 //
 
 import Foundation
 import SwiftUI
 
-// MARK: - Gut Health Benefits (Replaces Features)
+// MARK: - Step Definition
 
-struct GutBenefit: Identifiable {
-    let id = UUID()
-    let imageName: String
-    let title: String
-    let description: String
-
-    static let benefits: [GutBenefit] = [
-        GutBenefit(
-            imageName: "onboard_serotonin",
-            title: "Your Gut Makes You Happy",
-            description: "90% of serotonin—your 'feel good' hormone—is made in your gut. When digestion is off, your mood follows."
-        ),
-        GutBenefit(
-            imageName: "onboard_brainpower",
-            title: "Think Clearly, Feel Sharp",
-            description: "Brain fog, poor focus, and fatigue are signs of an unhappy gut. Digestive health directly impacts mental performance."
-        ),
-        GutBenefit(
-            imageName: "onboard_energy",
-            title: "Wake Up Energized",
-            description: "Poor digestion means poor nutrient absorption. When your gut thrives, you get more energy from food all day long."
-        ),
-        GutBenefit(
-            imageName: "onboard_immunity",
-            title: "Strengthen Your Immunity",
-            description: "70% of your immune system lives in your gut. A healthy microbiome is your first line of defense against illness."
-        )
-    ]
+enum OnboardingStepType {
+    case textInput
+    case singleSelect
+    case multiSelect
+    case agePicker
+    case weightPicker
 }
 
-// MARK: - Questionnaire (Problem-Aware Questions)
-
-struct OnboardingQuestion: Identifiable {
+struct OnboardingStep: Identifiable {
     let id: String
-    let question: String
+    let title: String
     let subtitle: String?
+    let type: OnboardingStepType
     let options: [String]
-    let allowsMultiple: Bool
+    /// Whether the user can use the "Skip this step" affordance at the top.
+    let allowSkip: Bool
 
-    static let questions: [OnboardingQuestion] = [
-        OnboardingQuestion(
-            id: "discomfort",
-            question: "How often do you feel bloated or uncomfortable after eating?",
-            subtitle: "Be honest—this helps us personalize your experience",
-            options: ["Almost never", "Sometimes", "Often", "Almost every day"],
-            allowsMultiple: false
+    static let steps: [OnboardingStep] = [
+        // --- Profile (still part of the same progress bar) ---
+        OnboardingStep(
+            id: "name",
+            title: "What's your name?",
+            subtitle: "Lee will use this to make things feel personal.",
+            type: .textInput,
+            options: [],
+            allowSkip: false
         ),
-        OnboardingQuestion(
-            id: "energy",
-            question: "How would you describe your energy levels?",
+        OnboardingStep(
+            id: "sex",
+            title: "What's your sex?",
+            subtitle: "Helps us calibrate your gut baselines.",
+            type: .singleSelect,
+            options: ["Female", "Male", "Non-binary", "Prefer not to say"],
+            allowSkip: false
+        ),
+        OnboardingStep(
+            id: "age",
+            title: "How old are you?",
             subtitle: nil,
-            options: ["Consistently high", "Good but crashes midday", "Often tired", "Frequently exhausted"],
-            allowsMultiple: false
+            type: .agePicker,
+            options: [],
+            allowSkip: true
         ),
-        OnboardingQuestion(
-            id: "mood_fog",
-            question: "Do you experience brain fog or mood swings?",
-            subtitle: "These can be connected to gut health",
-            options: ["Rarely", "Occasionally", "Frequently", "It's affecting my daily life"],
-            allowsMultiple: false
-        ),
-        OnboardingQuestion(
-            id: "regularity",
-            question: "How predictable are your bowel movements?",
+        OnboardingStep(
+            id: "weight",
+            title: "What's your weight?",
             subtitle: nil,
-            options: ["Very regular (same time daily)", "Mostly regular", "Unpredictable", "I have no idea"],
-            allowsMultiple: false
+            type: .weightPicker,
+            options: [],
+            allowSkip: true
         ),
-        OnboardingQuestion(
+
+        // --- Baseline behavior (powers Green Zone + AI chat priors) ---
+        OnboardingStep(
+            id: "frequency",
+            title: "How often do you typically poop?",
+            subtitle: "This sets your personal Green Zone baseline.",
+            type: .singleSelect,
+            options: [
+                "Multiple times a day",
+                "About once a day",
+                "Every other day",
+                "2–3 times a week",
+                "Less than that",
+                "I don't know"
+            ],
+            allowSkip: true
+        ),
+        OnboardingStep(
+            id: "first_time",
+            title: "When's your first poop of the day usually?",
+            subtitle: nil,
+            type: .singleSelect,
+            options: [
+                "Morning",
+                "Afternoon",
+                "Evening",
+                "Random / no pattern",
+                "I don't know"
+            ],
+            allowSkip: true
+        ),
+        OnboardingStep(
+            id: "diet",
+            title: "What best describes your diet?",
+            subtitle: nil,
+            type: .singleSelect,
+            options: [
+                "Omnivore",
+                "Vegetarian",
+                "Vegan",
+                "Keto / low-carb",
+                "Gluten-free",
+                "Mostly processed / fast food",
+                "No specific pattern"
+            ],
+            allowSkip: true
+        ),
+        OnboardingStep(
+            id: "sleep",
+            title: "How many hours of sleep do you usually get?",
+            subtitle: nil,
+            type: .singleSelect,
+            options: [
+                "Less than 5",
+                "5–6",
+                "7–8",
+                "9+",
+                "Varies a lot"
+            ],
+            allowSkip: true
+        ),
+        OnboardingStep(
+            id: "water",
+            title: "How much water do you drink daily?",
+            subtitle: nil,
+            type: .singleSelect,
+            options: [
+                "Less than 4 cups",
+                "4–6 cups",
+                "7–8 cups",
+                "9+ cups",
+                "I don't track"
+            ],
+            allowSkip: true
+        ),
+        OnboardingStep(
+            id: "stress",
+            title: "What's your baseline stress level?",
+            subtitle: "Stress shows up in your gut.",
+            type: .singleSelect,
+            options: [
+                "Low",
+                "Moderate",
+                "High",
+                "Very high",
+                "I don't know"
+            ],
+            allowSkip: true
+        ),
+        OnboardingStep(
             id: "symptoms",
-            question: "Which of these do you experience?",
-            subtitle: "Select all that apply",
-            options: ["Constipation", "Diarrhea", "Bloating & gas", "Stomach cramps", "Heartburn", "None of these"],
-            allowsMultiple: true
+            title: "Which symptoms do you experience regularly?",
+            subtitle: "Select all that apply.",
+            type: .multiSelect,
+            options: [
+                "Bloating",
+                "Cramps",
+                "Gas",
+                "Heartburn",
+                "Constipation",
+                "Diarrhea",
+                "None"
+            ],
+            allowSkip: true
         ),
-        OnboardingQuestion(
-            id: "impact",
-            question: "What would better gut health mean for you?",
-            subtitle: "What matters most to you",
-            options: ["More energy & vitality", "Better mood & mental clarity", "Less discomfort & bloating", "Overall wellness", "I just want to understand my body"],
-            allowsMultiple: false
+        OnboardingStep(
+            id: "goals",
+            title: "What matters most to you?",
+            subtitle: "Select all that apply.",
+            type: .multiSelect,
+            options: [
+                "More energy",
+                "Better mood",
+                "Less bloating",
+                "Weight management",
+                "Skin clarity",
+                "Just curious about my body"
+            ],
+            allowSkip: true
         )
     ]
 }
@@ -99,32 +189,26 @@ struct OnboardingQuestion: Identifiable {
 
 enum OnboardingPhase: Equatable {
     case welcome
-    case features
-    case profile
-    case questionnaire
-    case auth        // Sign in after questionnaire (max investment)
-    case inviteCode  // Invite code entry (between auth and completion)
+    case inviteCode  // closed-beta gate — only valid Firestore codes proceed
+    case questions   // unified profile + baseline behavior
+    case auth        // sign in after questions (max investment)
     case completion
 
     var stringValue: String {
         switch self {
         case .welcome: return "welcome"
-        case .features: return "features"
-        case .profile: return "profile"
-        case .questionnaire: return "questionnaire"
-        case .auth: return "auth"
         case .inviteCode: return "inviteCode"
+        case .questions: return "questions"
+        case .auth: return "auth"
         case .completion: return "completion"
         }
     }
 
     static func from(string: String) -> OnboardingPhase {
         switch string {
-        case "features": return .features
-        case "profile": return .profile
-        case "questionnaire": return .questionnaire
+        case "inviteCode", "invite": return .inviteCode
+        case "questions", "profile", "questionnaire": return .questions
         case "auth": return .auth
-        case "inviteCode": return .inviteCode
         case "completion": return .completion
         default: return .welcome
         }
@@ -134,21 +218,16 @@ enum OnboardingPhase: Equatable {
 // MARK: - Onboarding State
 
 class OnboardingState: ObservableObject {
-    // Current phase and step within phase
     @Published var phase: OnboardingPhase = .welcome {
         didSet { saveProgress() }
     }
-    @Published var featureIndex: Int = 0 {
-        didSet { saveProgress() }
-    }
-    @Published var profileStepIndex: Int = 0 {
-        didSet { saveProgress() }
-    }
-    @Published var questionIndex: Int = 0 {
+    /// Index into `OnboardingStep.steps`. Persisted so a reopen doesn't reset.
+    @Published var stepIndex: Int = 0 {
         didSet { saveProgress() }
     }
 
-    // Profile data
+    // Profile data — bound to dedicated steps but stored separately so they
+    // map cleanly onto the User model at completion.
     @Published var name: String = "" {
         didSet { UserDefaultsService.shared.onboardingName = name }
     }
@@ -162,21 +241,22 @@ class OnboardingState: ObservableObject {
         didSet { UserDefaultsService.shared.onboardingGender = gender }
     }
 
-    // Questionnaire answers
+    // Answers for non-profile steps. Key = step.id.
     @Published var answers: [String: [String]] = [:] {
         didSet { UserDefaultsService.shared.onboardingAnswers = answers }
     }
 
-    // Invite code
+    // Invite code (closed-beta gate). `inviteCodeValue` holds the validated
+    // code so the actual Firestore redemption can run AFTER auth, when we
+    // have a userId to record on the code's `redeemedBy` array.
     @Published var inviteCodeRedeemed: Bool = false
+    @Published var inviteCodeValue: String = ""
 
-    // Animation direction
+    // Slide-transition direction.
     @Published var slideDirection: Edge = .trailing
 
-    // Counts
-    static let featureCount = GutBenefit.benefits.count
-    static let profileStepCount = 4 // name, gender, age, weight
-    let questions = OnboardingQuestion.questions
+    let steps = OnboardingStep.steps
+    static var stepCount: Int { OnboardingStep.steps.count }
 
     // MARK: - Init (restore saved progress)
 
@@ -184,9 +264,7 @@ class OnboardingState: ObservableObject {
         let service = UserDefaultsService.shared
         if let savedPhase = service.onboardingPhase {
             self.phase = OnboardingPhase.from(string: savedPhase)
-            self.featureIndex = service.onboardingFeatureIndex
-            self.profileStepIndex = service.onboardingProfileStepIndex
-            self.questionIndex = service.onboardingQuestionIndex
+            self.stepIndex = min(service.onboardingStepIndex, Self.stepCount - 1)
         }
         if let savedName = service.onboardingName {
             self.name = savedName
@@ -204,168 +282,110 @@ class OnboardingState: ObservableObject {
     private func saveProgress() {
         let service = UserDefaultsService.shared
         service.onboardingPhase = phase.stringValue
-        service.onboardingFeatureIndex = featureIndex
-        service.onboardingProfileStepIndex = profileStepIndex
-        service.onboardingQuestionIndex = questionIndex
+        service.onboardingStepIndex = stepIndex
     }
 
-    // MARK: - Progress Calculation
+    // MARK: - Step accessors
 
-    var totalSteps: Int {
-        return 1 + Self.featureCount + Self.profileStepCount + questions.count + 1 + 1 + 1
+    var currentStep: OnboardingStep? {
+        guard phase == .questions, stepIndex >= 0, stepIndex < steps.count else { return nil }
+        return steps[stepIndex]
     }
 
-    var currentStep: Int {
-        switch phase {
-        case .welcome:
-            return 0
-        case .features:
-            return 1 + featureIndex
-        case .profile:
-            return 1 + Self.featureCount + profileStepIndex
-        case .questionnaire:
-            return 1 + Self.featureCount + Self.profileStepCount + questionIndex
-        case .auth:
-            return 1 + Self.featureCount + Self.profileStepCount + questions.count
-        case .inviteCode:
-            return 1 + Self.featureCount + Self.profileStepCount + questions.count + 1
-        case .completion:
-            return totalSteps - 1
-        }
-    }
+    // MARK: - Progress
 
+    /// 0 → 1 across the question phase. Welcome/auth/completion sit outside.
     var progress: CGFloat {
-        guard totalSteps > 1 else { return 0 }
-        return CGFloat(currentStep) / CGFloat(totalSteps - 1)
+        guard phase == .questions, Self.stepCount > 1 else {
+            return phase == .questions ? 0 : 1
+        }
+        return CGFloat(stepIndex + 1) / CGFloat(Self.stepCount)
     }
 
-    // Show progress bar for profile and questionnaire
     var showProgressBar: Bool {
-        phase == .profile || phase == .questionnaire
+        phase == .questions
     }
 
     // MARK: - Navigation
 
     func next() {
         slideDirection = .trailing
-
-        let anim: Animation = phase == .features
-            ? .easeInOut(duration: 0.25)
-            : .spring(response: 0.35, dampingFraction: 0.85)
+        let anim: Animation = .spring(response: 0.35, dampingFraction: 0.85)
 
         withAnimation(anim) {
             switch phase {
             case .welcome:
-                // Animated intro replaces the old welcome + 4 feature slides.
-                // Jump straight to profile when the intro finishes.
-                phase = .profile
-                profileStepIndex = 0
+                phase = .inviteCode
 
-            case .features:
-                // Dead branch — the animated intro skips .features entirely.
-                if featureIndex < Self.featureCount - 1 {
-                    featureIndex += 1
-                } else {
-                    phase = .profile
-                    profileStepIndex = 0
-                }
+            case .inviteCode:
+                phase = .questions
+                stepIndex = 0
 
-            case .profile:
-                if profileStepIndex < Self.profileStepCount - 1 {
-                    profileStepIndex += 1
-                } else {
-                    phase = .questionnaire
-                    questionIndex = 0
-                }
-
-            case .questionnaire:
-                if questionIndex < questions.count - 1 {
-                    questionIndex += 1
+            case .questions:
+                if stepIndex < Self.stepCount - 1 {
+                    stepIndex += 1
                 } else {
                     phase = .auth
                 }
 
             case .auth:
-                // Invite code phase skipped for beta — go straight to completion.
-                phase = .completion
-
-            case .inviteCode:
-                // Kept for compatibility; never reached.
                 phase = .completion
 
             case .completion:
-                break // Final step
+                break
             }
         }
     }
 
     func back() {
         slideDirection = .leading
-
-        let anim: Animation = phase == .features
-            ? .easeInOut(duration: 0.25)
-            : .spring(response: 0.35, dampingFraction: 0.85)
+        let anim: Animation = .spring(response: 0.35, dampingFraction: 0.85)
 
         withAnimation(anim) {
             switch phase {
             case .welcome:
-                break // Can't go back
+                break
 
-            case .features:
-                if featureIndex > 0 {
-                    featureIndex -= 1
+            case .inviteCode:
+                phase = .welcome
+
+            case .questions:
+                if stepIndex > 0 {
+                    stepIndex -= 1
                 } else {
-                    phase = .welcome
-                }
-
-            case .profile:
-                if profileStepIndex > 0 {
-                    profileStepIndex -= 1
-                }
-                // No back from first profile step — the animated intro is not
-                // re-enterable, so we short-circuit here.
-
-            case .questionnaire:
-                if questionIndex > 0 {
-                    questionIndex -= 1
-                } else {
-                    phase = .profile
-                    profileStepIndex = Self.profileStepCount - 1
+                    phase = .inviteCode
                 }
 
             case .auth:
-                phase = .questionnaire
-                questionIndex = questions.count - 1
-
-            case .inviteCode:
-                phase = .auth
+                phase = .questions
+                stepIndex = Self.stepCount - 1
 
             case .completion:
-                // Invite code skipped — go back to auth.
                 phase = .auth
             }
         }
     }
 
-    func skipToProfile() {
-        slideDirection = .trailing
-        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) {
-            phase = .profile
-            profileStepIndex = 0
+    /// Skip the currently-shown question without recording an answer.
+    func skipCurrent() {
+        guard let step = currentStep else { return }
+        // Clear any prior answer for this step so a skipped question reads as "no answer".
+        if step.type != .agePicker && step.type != .weightPicker {
+            answers.removeValue(forKey: step.id)
         }
+        next()
     }
 
     func reset() {
         phase = .welcome
-        featureIndex = 0
-        profileStepIndex = 0
-        questionIndex = 0
+        stepIndex = 0
         name = ""
         age = 25
         weight = 150
         gender = ""
         answers = [:]
         inviteCodeRedeemed = false
+        inviteCodeValue = ""
         UserDefaultsService.shared.clearOnboardingProgress()
     }
 }

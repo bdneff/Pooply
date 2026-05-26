@@ -70,6 +70,20 @@ class AuthService: ObservableObject {
         isAuthenticated = false
     }
 
+    /// Permanently deletes the signed-in Firebase Auth account. Caller is
+    /// responsible for wiping Firestore data first (via
+    /// `FirebaseService.deleteAllUserData()`). May throw
+    /// `requiresRecentLogin` if the user hasn't authenticated recently — in
+    /// that case the UI should re-prompt for sign-in and retry.
+    func deleteAuthAccount() async throws {
+        guard let currentUser = Auth.auth().currentUser else {
+            throw AuthError.invalidCredential
+        }
+        try await currentUser.delete()
+        user = nil
+        isAuthenticated = false
+    }
+
     func resetPassword(email: String) async throws {
         try await Auth.auth().sendPasswordReset(withEmail: email)
     }

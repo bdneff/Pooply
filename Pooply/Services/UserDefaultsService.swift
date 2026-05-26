@@ -24,12 +24,10 @@ class UserDefaultsService {
         static let logHistory = "pooply_logHistory"
         // Onboarding progress
         static let onboardingPhase = "pooply_onboardingPhase"
-        static let onboardingFeatureIndex = "pooply_onboardingFeatureIndex"
-        static let onboardingQuestionIndex = "pooply_onboardingQuestionIndex"
+        static let onboardingStepIndex = "pooply_onboardingStepIndex"
         static let onboardingName = "pooply_onboardingName"
         static let onboardingAge = "pooply_onboardingAge"
         static let onboardingWeight = "pooply_onboardingWeight"
-        static let onboardingProfileStepIndex = "pooply_onboardingProfileStepIndex"
         static let onboardingGender = "pooply_onboardingGender"
         static let onboardingAnswers = "pooply_onboardingAnswers"
     }
@@ -170,14 +168,9 @@ class UserDefaultsService {
         set { defaults.set(newValue, forKey: Keys.onboardingPhase) }
     }
 
-    var onboardingFeatureIndex: Int {
-        get { defaults.integer(forKey: Keys.onboardingFeatureIndex) }
-        set { defaults.set(newValue, forKey: Keys.onboardingFeatureIndex) }
-    }
-
-    var onboardingQuestionIndex: Int {
-        get { defaults.integer(forKey: Keys.onboardingQuestionIndex) }
-        set { defaults.set(newValue, forKey: Keys.onboardingQuestionIndex) }
+    var onboardingStepIndex: Int {
+        get { defaults.integer(forKey: Keys.onboardingStepIndex) }
+        set { defaults.set(newValue, forKey: Keys.onboardingStepIndex) }
     }
 
     var onboardingName: String? {
@@ -199,11 +192,6 @@ class UserDefaultsService {
             return val == 0 ? 150 : val
         }
         set { defaults.set(newValue, forKey: Keys.onboardingWeight) }
-    }
-
-    var onboardingProfileStepIndex: Int {
-        get { defaults.integer(forKey: Keys.onboardingProfileStepIndex) }
-        set { defaults.set(newValue, forKey: Keys.onboardingProfileStepIndex) }
     }
 
     var onboardingGender: String? {
@@ -231,12 +219,10 @@ class UserDefaultsService {
 
     func clearOnboardingProgress() {
         defaults.removeObject(forKey: Keys.onboardingPhase)
-        defaults.removeObject(forKey: Keys.onboardingFeatureIndex)
-        defaults.removeObject(forKey: Keys.onboardingQuestionIndex)
+        defaults.removeObject(forKey: Keys.onboardingStepIndex)
         defaults.removeObject(forKey: Keys.onboardingName)
         defaults.removeObject(forKey: Keys.onboardingAge)
         defaults.removeObject(forKey: Keys.onboardingWeight)
-        defaults.removeObject(forKey: Keys.onboardingProfileStepIndex)
         defaults.removeObject(forKey: Keys.onboardingGender)
         defaults.removeObject(forKey: Keys.onboardingAnswers)
     }

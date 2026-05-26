@@ -561,11 +561,10 @@ struct AnalyzingView: View {
     let onRetry: () -> Void
 
     @State private var sweepRotation: Double = 0
-    @State private var glowPulse: Bool = false
     @State private var dotCount: Int = 0
 
-    private let ringOuterDiameter: CGFloat = 300
-    private let ringThickness: CGFloat = 24
+    private let ringOuterDiameter: CGFloat = 150
+    private let ringThickness: CGFloat = 6
 
     private let dotTimer = Timer.publish(every: 0.45, on: .main, in: .common).autoconnect()
 
@@ -614,10 +613,6 @@ struct AnalyzingView: View {
             withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
                 sweepRotation = 360
             }
-            // Soft outer glow pulse
-            withAnimation(.easeInOut(duration: 1.4).repeatForever(autoreverses: true)) {
-                glowPulse = true
-            }
         }
         .onReceive(dotTimer) { _ in
             dotCount = (dotCount + 1) % 4
@@ -631,16 +626,10 @@ struct AnalyzingView: View {
             Spacer()
 
             ZStack {
-                // Soft outer glow that breathes
-                Circle()
-                    .fill(Theme.Colors.iconBlue400.opacity(glowPulse ? 0.32 : 0.16))
-                    .frame(width: ringOuterDiameter + 60, height: ringOuterDiameter + 60)
-                    .blur(radius: 28)
-
-                // Empty track
+                // Empty track — black at low opacity
                 Circle()
                     .stroke(
-                        Color.white.opacity(0.55),
+                        Theme.Colors.neutral900.opacity(0.10),
                         style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
                     )
                     .frame(width: ringOuterDiameter, height: ringOuterDiameter)
@@ -649,35 +638,24 @@ struct AnalyzingView: View {
                 Circle()
                     .trim(from: 0, to: 0.3)
                     .stroke(
-                        AngularGradient(
-                            colors: [
-                                Theme.Colors.iconBlue300,
-                                Theme.Colors.iconBlue400,
-                                Theme.Colors.iconBlue500,
-                                Theme.Colors.iconBlue400
-                            ],
-                            center: .center,
-                            startAngle: .degrees(-90),
-                            endAngle: .degrees(270)
-                        ),
+                        Theme.Colors.neutral900.opacity(0.85),
                         style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
                     )
                     .frame(width: ringOuterDiameter, height: ringOuterDiameter)
                     .rotationEffect(.degrees(sweepRotation - 90))
 
                 // Inside ring: label + animated dots
-                VStack(spacing: 6) {
+                VStack(spacing: 4) {
                     Text("Analyzing")
-                        .font(Theme.Fonts.heading(22))
+                        .font(Theme.Fonts.heading(16))
                         .foregroundStyle(Theme.Colors.neutral900)
                     Text(dotsString)
-                        .font(.custom("PlusJakartaSans-ExtraBold", size: 28))
-                        .foregroundStyle(Theme.Colors.iconBlue500)
-                        .frame(height: 32)
-                        .frame(minWidth: 60)
+                        .font(.custom("PlusJakartaSans-ExtraBold", size: 18))
+                        .foregroundStyle(Theme.Colors.neutral900.opacity(0.5))
+                        .frame(height: 20)
+                        .frame(minWidth: 40)
                 }
             }
-            .shadow(color: Theme.Colors.iconBlue500.opacity(0.22), radius: 24, x: 0, y: 10)
 
             Spacer()
 
@@ -754,14 +732,14 @@ struct AnalysisResultsView: View {
     let onRetake: () -> Void
     let onClose: () -> Void
 
-    @State private var gaugeFill: CGFloat = 0
-    @State private var scoreAnimated: Int = 0
+    @State private var scoreProgress: Double = 0
     @State private var ringPulse: Bool = false
     @State private var showSupporting: Bool = false
     @State private var confettiStart: Date? = nil
 
-    private let ringOuterDiameter: CGFloat = 300
-    private let ringThickness: CGFloat = 24
+    private var scoreAnimated: Int {
+        Int((Double(percentileScore) * scoreProgress).rounded())
+    }
 
     private var percentileScore: Int {
         let log = result.toLog()
@@ -774,15 +752,6 @@ struct AnalysisResultsView: View {
         case 70..<85:  return Theme.Colors.amber
         case 50..<70:  return Theme.Colors.hard
         default:       return Theme.Colors.lavender
-        }
-    }
-
-    private var darkScoreColor: Color {
-        switch percentileScore {
-        case 85...100: return Color(hex: "#14532D")
-        case 70..<85:  return Color(hex: "#78350F")
-        case 50..<70:  return Color(hex: "#7F1D1D")
-        default:       return Color(hex: "#3B0764")
         }
     }
 
@@ -809,32 +778,36 @@ struct AnalysisResultsView: View {
             // Content
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
-                    // Top bar
-                    HStack {
-                        CloseButton(action: onClose)
-                        Spacer()
+                    // Top bar — close (L) + Lee mascot centered.
+                    ZStack {
+                        MascotCircle(size: 56)
+
+                        HStack {
+                            CloseButton(action: onClose)
+                            Spacer()
+                        }
                     }
                     .padding(.horizontal, Theme.Spacing.screenHorizontal)
                     .padding(.top, Theme.Spacing.md)
 
-                    // MARK: - Hero: Gauge ring with giant score inside
-                    gaugeHero
-                        .padding(.top, Theme.Spacing.lg)
+                    // MARK: - Hero: Just the score number, no ring.
+                    scoreHero
+                        .padding(.top, Theme.Spacing.xl)
                         .padding(.bottom, Theme.Spacing.lg)
 
                     // MARK: - Score Label
                     VStack(spacing: 8) {
                         Text("POOP SCORE")
                             .font(Theme.Fonts.label(11))
-                            .foregroundStyle(darkScoreColor.opacity(0.55))
+                            .foregroundStyle(Theme.Colors.neutral900)
                             .tracking(1.5)
 
                         Text(scoreLabel)
                             .font(Theme.Fonts.heading())
-                            .foregroundStyle(darkScoreColor)
+                            .foregroundStyle(Theme.Colors.neutral900)
                             .padding(.horizontal, 20)
                             .padding(.vertical, 8)
-                            .background(scoreColor.opacity(0.25))
+                            .background(scoreColor.opacity(0.28))
                             .clipShape(Capsule())
                     }
                     .opacity(showSupporting ? 1 : 0)
@@ -935,83 +908,48 @@ struct AnalysisResultsView: View {
         .onAppear(perform: runRevealSequence)
     }
 
-    // MARK: - Gauge hero (ring + score)
+    // MARK: - Score hero (just the number, no ring)
 
-    private var gaugeHero: some View {
-        ZStack {
-            // Empty track
-            Circle()
-                .stroke(
-                    Color.white.opacity(0.55),
-                    style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
-                )
-                .frame(width: ringOuterDiameter, height: ringOuterDiameter)
-
-            // Filled sweep — fills to score/100
-            Circle()
-                .trim(from: 0, to: gaugeFill)
-                .stroke(
-                    AngularGradient(
-                        colors: [
-                            Theme.Colors.iconBlue300,
-                            Theme.Colors.iconBlue400,
-                            Theme.Colors.iconBlue500,
-                            Theme.Colors.iconBlue400
-                        ],
-                        center: .center,
-                        startAngle: .degrees(-90),
-                        endAngle: .degrees(270)
-                    ),
-                    style: StrokeStyle(lineWidth: ringThickness, lineCap: .round)
-                )
-                .rotationEffect(.degrees(-90))
-                .frame(width: ringOuterDiameter, height: ringOuterDiameter)
-
-            // One-shot punch when gauge tops out
-            Circle()
-                .stroke(Theme.Colors.iconBlue400.opacity(ringPulse ? 0 : 0.55), lineWidth: 4)
-                .frame(width: ringOuterDiameter, height: ringOuterDiameter)
-                .scaleEffect(ringPulse ? 1.18 : 1.0)
-                .animation(.easeOut(duration: 0.6), value: ringPulse)
-
-            // Giant score number inside the ring
-            Text("\(scoreAnimated)")
-                .font(.custom("PlusJakartaSans-ExtraBold", size: 180))
-                .foregroundStyle(darkScoreColor)
-                .contentTransition(.numericText())
-                .minimumScaleFactor(0.5)
-                .lineLimit(1)
-                .frame(width: ringOuterDiameter - ringThickness * 2)
-        }
-        .shadow(color: Theme.Colors.iconBlue500.opacity(0.22), radius: 24, x: 0, y: 10)
-        .frame(width: ringOuterDiameter, height: ringOuterDiameter)
-        .frame(maxWidth: .infinity)
+    private var scoreHero: some View {
+        Text("\(scoreAnimated)")
+            .font(.custom("PlusJakartaSans-ExtraBold", size: 200))
+            .monospacedDigit()
+            .foregroundStyle(scoreColor)
+            .minimumScaleFactor(0.5)
+            .lineLimit(1)
+            .scaleEffect(ringPulse ? 1.04 : 1.0)
+            .animation(.spring(response: 0.4, dampingFraction: 0.55), value: ringPulse)
+            .frame(maxWidth: .infinity)
     }
 
     // MARK: - Reveal sequence
 
     private func runRevealSequence() {
         // Reset
-        gaugeFill = 0
-        scoreAnimated = 0
+        scoreProgress = 0
         ringPulse = false
         showSupporting = false
 
         let fillDuration: Double = 0.8
 
-        // Fill gauge to score/100
+        // Smooth single-animation count-up — `scoreAnimated` derives Int from
+        // the interpolated `scoreProgress` (0…1), so digits change at a steady
+        // cadence with no stacked animations or horizontal jitter.
         withAnimation(.easeOut(duration: fillDuration)) {
-            gaugeFill = CGFloat(percentileScore) / 100.0
+            scoreProgress = 1
         }
 
-        // Count-up score in parallel with the fill
-        animateScore(duration: fillDuration)
-
-        // When gauge tops out: pulse + confetti + supporting content
+        // When count-up finishes: punch + supporting content + confetti (good scores only).
         DispatchQueue.main.asyncAfter(deadline: .now() + fillDuration) {
             ringPulse = true
-            confettiStart = Date()
-            Theme.Haptics.success()
+            // Celebrate only when the score is genuinely good — 75+ ("Good" or above).
+            // Firing confetti on a 40 reads as mocking; this keeps the moment earned.
+            if percentileScore >= 75 {
+                confettiStart = Date()
+                Theme.Haptics.success()
+            } else {
+                Theme.Haptics.medium()
+            }
 
             withAnimation(.spring(response: 0.55, dampingFraction: 0.82)) {
                 showSupporting = true
@@ -1019,18 +957,6 @@ struct AnalysisResultsView: View {
         }
     }
 
-    private func animateScore(duration: Double) {
-        let target = percentileScore
-        let steps = 25
-        let interval = duration / Double(steps)
-        for i in 0...steps {
-            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * interval) {
-                withAnimation(.easeOut(duration: interval)) {
-                    scoreAnimated = Int(Double(target) * Double(i) / Double(steps))
-                }
-            }
-        }
-    }
 }
 
 // MARK: - Confetti Burst

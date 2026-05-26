@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UniformTypeIdentifiers
+import StoreKit
 
 struct ProfileModal: View {
     @Binding var isPresented: Bool
@@ -17,6 +18,12 @@ struct ProfileModal: View {
     @State private var showExportData = false
     @State private var showNotificationSettings = false
     @State private var showShareCard = false
+
+    // Danger zone
+    @State private var showLogoutConfirm = false
+    @State private var showDeleteConfirm = false
+    @State private var isDeletingAccount = false
+    @State private var deleteErrorMessage: String?
 
     var body: some View {
         ZStack {
@@ -130,51 +137,32 @@ struct ProfileModal: View {
                     // }
 
                 HStack(spacing: 12) {
-                    Button(action: {}) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(Theme.Colors.textPrimary)
-                            Text("Rate Us")
-                                .font(Theme.Fonts.bodyBold())
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(Theme.Colors.neutral300)
-                        }
-                        .foregroundStyle(Theme.Colors.textPrimary)
-                        .padding(Theme.Spacing.md)
-                        .background(Theme.Colors.neutral50)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
-                                .stroke(Theme.Colors.neutral50, lineWidth: 1)
-                        )
-                    }
+                    ActionPillButton(
+                        icon: "star.fill",
+                        title: "Rate Us",
+                        action: requestAppStoreReview
+                    )
 
-                    Button(action: {}) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "bubble.left.fill")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundStyle(Theme.Colors.textPrimary)
-                            Text("Contact")
-                                .font(Theme.Fonts.bodyBold())
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundStyle(Theme.Colors.neutral300)
-                        }
-                        .foregroundStyle(Theme.Colors.textPrimary)
-                        .padding(Theme.Spacing.md)
-                        .background(Theme.Colors.neutral50)
-                        .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
-                                .stroke(Theme.Colors.neutral50, lineWidth: 1)
-                        )
-                    }
+                    ActionPillButton(
+                        icon: "bubble.left.fill",
+                        title: "Contact",
+                        action: openContactEmail
+                    )
                 }
                 }
+                .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                .padding(.bottom, Theme.Spacing.lg)
+
+                // MARK: - Danger Zone (Log Out + Delete Account)
+                ProfileDottedDivider()
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.bottom, Theme.Spacing.lg)
+
+                DangerZoneCard(
+                    onLogOut: { showLogoutConfirm = true },
+                    onDelete: { showDeleteConfirm = true },
+                    isDeleting: isDeletingAccount
+                )
                 .padding(.horizontal, Theme.Spacing.screenHorizontal)
                 .padding(.bottom, Theme.Spacing.lg)
 
@@ -191,7 +179,7 @@ struct ProfileModal: View {
                     .padding(.horizontal, Theme.Spacing.screenHorizontal)
                     .padding(.bottom, Theme.Spacing.md)
 
-                Text("pooply v1.1.0")
+                Text("pooply v1.0.0")
                     .font(Theme.Fonts.captionBold(13))
                     .foregroundStyle(Theme.Colors.neutral400)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -227,6 +215,29 @@ struct ProfileModal: View {
             )
             .environmentObject(userViewModel)
         }
+        // Log Out confirmation
+        .alert("Log out of Pooply?", isPresented: $showLogoutConfirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Log Out", role: .destructive) { performLogout() }
+        } message: {
+            Text("You'll need to sign in again to access your gut data.")
+        }
+        // Delete Account confirmation (Apple-required double-confirm pattern)
+        .alert("Delete your account?", isPresented: $showDeleteConfirm) {
+            Button("Cancel", role: .cancel) {}
+            Button("Delete", role: .destructive) { performDeleteAccount() }
+        } message: {
+            Text("This permanently deletes your account, all logs, and uploaded images. This cannot be undone.")
+        }
+        // Surface deletion errors (e.g. requires-recent-login)
+        .alert("Couldn't delete account", isPresented: Binding(
+            get: { deleteErrorMessage != nil },
+            set: { if !$0 { deleteErrorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) { deleteErrorMessage = nil }
+        } message: {
+            Text(deleteErrorMessage ?? "")
+        }
     }
 
     private var memberSinceShort: String {
@@ -236,6 +247,174 @@ struct ProfileModal: View {
             return formatter.string(from: firstLog.timestamp)
         }
         return formatter.string(from: Date())
+    }
+
+    // MARK: - Action handlers
+
+    /// TODO(BEFORE LAUNCH): swap to a dedicated support address (e.g.
+    /// support@pooply.app) once that mailbox exists. Personal email is fine
+    /// for closed beta but reads odd in App Store reviews.
+    private static let contactEmail = "grossyb12@gmail.com"
+
+    private func requestAppStoreReview() {
+        guard let scene = UIApplication.shared.connectedScenes
+            .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
+        else { return }
+        SKStoreReviewController.requestReview(in: scene)
+    }
+
+    private func openContactEmail() {
+        let subject = "Pooply support"
+        let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? subject
+        guard let url = URL(string: "mailto:\(Self.contactEmail)?subject=\(encodedSubject)") else { return }
+        UIApplication.shared.open(url)
+    }
+
+    // MARK: - Danger Zone Actions
+
+    private func performLogout() {
+        Theme.Haptics.medium()
+
+        // 1. Sign out of Firebase Auth
+        try? AuthService.shared.signOut()
+
+        // 2. Wipe local user state so the next launch starts clean
+        UserDefaultsService.shared.clearAllData()
+        userViewModel.user = User(name: "Guest", age: 25, weight: 150, gender: "other")
+        userViewModel.logHistory = []
+
+        // 3. Dismiss the modal — @AppStorage("pooply_hasCompletedOnboarding")
+        // in PooplyApp will see the cleared flag and re-render onboarding.
+        isPresented = false
+    }
+
+    private func performDeleteAccount() {
+        Theme.Haptics.medium()
+        isDeletingAccount = true
+        deleteErrorMessage = nil
+
+        Task {
+            do {
+                // 1. Delete Firestore footprint (logs + images + user doc)
+                try await FirebaseService.shared.deleteAllUserData()
+
+                // 2. Delete the Firebase Auth account itself
+                try await AuthService.shared.deleteAuthAccount()
+
+                // 3. Wipe local state and dismiss
+                await MainActor.run {
+                    UserDefaultsService.shared.clearAllData()
+                    userViewModel.user = User(name: "Guest", age: 25, weight: 150, gender: "other")
+                    userViewModel.logHistory = []
+                    isDeletingAccount = false
+                    isPresented = false
+                }
+            } catch {
+                let nsError = error as NSError
+                // Surface the raw error in the Xcode console so we can diagnose
+                // anything beyond the known recent-login path.
+                print("[DeleteAccount] failed — domain=\(nsError.domain) code=\(nsError.code) desc=\(nsError.localizedDescription)")
+
+                await MainActor.run {
+                    isDeletingAccount = false
+
+                    if nsError.code == 17014 /* AuthErrorCode.requiresRecentLogin */ {
+                        // Firebase requires recent auth for account deletion.
+                        // Sign the user out + wipe local so they're routed to
+                        // onboarding and can sign in again, then retry Delete.
+                        try? AuthService.shared.signOut()
+                        UserDefaultsService.shared.clearAllData()
+                        userViewModel.user = User(name: "Guest", age: 25, weight: 150, gender: "other")
+                        userViewModel.logHistory = []
+                        deleteErrorMessage = "For security, Firebase needs you to sign in again before deleting your account. We've signed you out — please sign back in and tap Delete Account once more."
+                        // Dismiss the profile modal so the parent re-renders
+                        // and shows the onboarding/auth flow.
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            isPresented = false
+                        }
+                    } else {
+                        deleteErrorMessage = "\(error.localizedDescription)\n\n(Error \(nsError.code))"
+                    }
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Danger Zone Card
+
+private struct DangerZoneCard: View {
+    let onLogOut: () -> Void
+    let onDelete: () -> Void
+    let isDeleting: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Theme.Spacing.sm) {
+            Text("Danger Zone")
+                .font(Theme.Fonts.heading())
+                .foregroundStyle(Theme.Colors.textPrimary)
+                .padding(.bottom, Theme.Spacing.xs)
+
+            VStack(spacing: 0) {
+                SettingsMenuItem(
+                    icon: "rectangle.portrait.and.arrow.right",
+                    title: "Log Out",
+                    action: onLogOut
+                )
+
+                Divider()
+                    .overlay(Theme.Colors.neutral50)
+                    .padding(.leading, 56)
+
+                SettingsMenuItem(
+                    icon: "trash.fill",
+                    title: isDeleting ? "Deleting…" : "Delete Account",
+                    isDestructive: true,
+                    action: {
+                        guard !isDeleting else { return }
+                        onDelete()
+                    }
+                )
+            }
+            .glassSurface(radius: Theme.Radius.medium)
+        }
+    }
+}
+
+// MARK: - Action Pill Button (matches Settings-row haptic pattern)
+
+private struct ActionPillButton: View {
+    let icon: String
+    let title: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: {
+            Theme.Haptics.light()
+            action()
+        }) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundStyle(Theme.Colors.textPrimary)
+                Text(title)
+                    .font(Theme.Fonts.bodyBold())
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Theme.Colors.neutral300)
+            }
+            .foregroundStyle(Theme.Colors.textPrimary)
+            .padding(Theme.Spacing.md)
+            .background(Theme.Colors.neutral50)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.Radius.medium, style: .continuous)
+                    .stroke(Theme.Colors.neutral50, lineWidth: 1)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -544,7 +723,12 @@ private struct SettingsMenuItem: View {
     let icon: String
     let title: String
     var subtitle: String? = nil
+    var isDestructive: Bool = false
     let action: () -> Void
+
+    private var primaryColor: Color {
+        isDestructive ? Theme.Colors.blood : Theme.Colors.textPrimary
+    }
 
     var body: some View {
         Button(action: {
@@ -554,13 +738,13 @@ private struct SettingsMenuItem: View {
             HStack(spacing: Theme.Spacing.md) {
                 Image(systemName: icon)
                     .font(.system(size: 18))
-                    .foregroundStyle(Theme.Colors.textPrimary)
+                    .foregroundStyle(primaryColor)
                     .frame(width: 24, height: 24)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
                         .font(Theme.Fonts.body())
-                        .foregroundStyle(Theme.Colors.textPrimary)
+                        .foregroundStyle(primaryColor)
 
                     if let subtitle = subtitle {
                         Text(subtitle)

@@ -9,7 +9,6 @@ import SwiftUI
 import FirebaseCore
 import RevenueCat
 import UserNotifications
-import AppTrackingTransparency
 
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
     func application(_ application: UIApplication,
@@ -41,39 +40,37 @@ struct PooplyApp: App {
     @StateObject private var userViewModel: UserViewModel
     @StateObject private var authService = AuthService.shared
     @StateObject private var subscriptionService = SubscriptionService.shared
-    @State private var showSplash: Bool = true
+    // Splash video disabled for beta — app launches straight to Welcome/Get
+    // Started (or ContentView if already onboarded). Flip this back to `true`
+    // and uncomment the splash branch below to re-enable.
+    @State private var showSplash: Bool = false
 
     init() {
         let service = UserDefaultsService.shared
         if let savedUser = service.loadUser() {
-            _userViewModel = StateObject(wrappedValue: UserViewModel(user: savedUser, withDummyData: true))
+            _userViewModel = StateObject(wrappedValue: UserViewModel(user: savedUser, withDummyData: false))
         } else {
             _userViewModel = StateObject(wrappedValue: UserViewModel(
-                user: User(name: "Guest", age: 25, weight: 150, gender: "other")
+                user: User(name: "Guest", age: 25, weight: 150, gender: "other"),
+                withDummyData: false
             ))
         }
     }
 
     var body: some Scene {
         WindowGroup {
-            // Splash owns the whole screen — nothing else is mounted while it's
-            // visible, so no sneaky auto-focus side effects (keyboards etc.)
-            // from the onboarding views below.
-            if showSplash {
-                SplashVideoView(isPresented: $showSplash)
-                    .transition(.opacity)
-            } else if !hasCompletedOnboarding {
+            // Splash disabled for beta — see `showSplash` declaration above.
+            // if showSplash {
+            //     SplashVideoView(isPresented: $showSplash)
+            //         .transition(.opacity)
+            // } else
+            if !hasCompletedOnboarding {
                 OnboardingView(hasCompletedOnboarding: $hasCompletedOnboarding)
                     .environmentObject(userViewModel)
                     .environmentObject(authService)
                     .environmentObject(subscriptionService)
                     .preferredColorScheme(.light)
                     .transition(.opacity)
-                    .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-                            ATTrackingManager.requestTrackingAuthorization { _ in }
-                        }
-                    }
             } else {
                 ContentView()
                     .environmentObject(userViewModel)

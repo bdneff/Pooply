@@ -215,6 +215,33 @@ class FirebaseService {
             try await saveLog(log)
         }
     }
+
+    // MARK: - Account Deletion (App Store Guideline 5.1.1(v))
+
+    /// Deletes the signed-in user's entire Firestore footprint: every log
+    /// document in their `logs` subcollection, any uploaded images in Storage,
+    /// and finally the top-level user document. Does NOT delete the Firebase
+    /// Auth account — that's `AuthService.deleteAuthAccount()`.
+    func deleteAllUserData() async throws {
+        guard let userId = userId else { throw FirebaseError.notAuthenticated }
+
+        // 1. Delete every log + its image
+        let logsSnapshot = try await db.collection("users").document(userId)
+            .collection("logs").getDocuments()
+
+        for doc in logsSnapshot.documents {
+            let data = doc.data()
+            if let imageURL = data["imageURL"] as? String, !imageURL.isEmpty,
+               let logIdString = data["id"] as? String,
+               let logId = UUID(uuidString: logIdString) {
+                try? await deleteImage(for: logId)
+            }
+            try await doc.reference.delete()
+        }
+
+        // 2. Delete the user document
+        try await db.collection("users").document(userId).delete()
+    }
 }
 
 // MARK: - Errors

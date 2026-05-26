@@ -2,8 +2,10 @@
 //  DesignSystem.swift
 //  Pooply
 //
-//  Design System v4 — Liquid Glass + Mesh Gradient
-//  Icon-blue + warm orange mesh background, glass everything, dark text.
+//  Design System v5 — Tiimo-minimal:
+//  cream surface, baby blue (logo) + caramel (mascot) brand colors,
+//  surgical frosted glass only on tab bar / FAB / contained data widgets.
+//  Espresso brown text. Bristol data palette used ONLY in data viz.
 //
 
 import SwiftUI
@@ -18,103 +20,76 @@ struct Theme {
     // MARK: - Colors
 
     struct Colors {
-        // === Brand — Icon Blue (the exact candy blue from the app icon) ===
-        static let iconBlue50  = Color(hex: "#E7F6FE")
-        static let iconBlue100 = Color(hex: "#C7EAFB")
-        static let iconBlue200 = Color(hex: "#9CDBF7")
-        static let iconBlue300 = Color(hex: "#7BCEF3")
-        static let iconBlue400 = Color(hex: "#5EC4F1")  // Hero icon blue
-        static let iconBlue500 = Color(hex: "#3DAEDE")
-        static let iconBlue600 = Color(hex: "#2C92BD")
-        static let iconBlue700 = Color(hex: "#1F7397")
+        // === Brand: Baby Blue (from app logo) ===
+        static let babyBlue50  = Color(hex: "#EEF7FC")
+        static let babyBlue100 = Color(hex: "#D7ECF7")
+        static let babyBlue200 = Color(hex: "#B7DEEF")
+        static let babyBlue300 = Color(hex: "#92CDE6")
+        static let babyBlue400 = Color(hex: "#8ADBFF")  // hero baby blue
+        static let babyBlue500 = Color(hex: "#4DA4C9")
+        static let babyBlue600 = Color(hex: "#3589B0")
+        static let babyBlue700 = Color(hex: "#266F92")
 
-        // === Brand — Warm Beige/Tan (UI accents, NOT orange) ===
-        // App is BLUE-dominant. Beige is the secondary warm accent — used for
-        // selected states, slogan, dark accents. Orange palette below is kept
-        // ONLY for log/data viz colors (hard stool = amber), NEVER for UI buttons.
-        static let beige50  = Color(hex: "#FBF3E8")
-        static let beige100 = Color(hex: "#F4E3CC")
-        static let beige200 = Color(hex: "#E8D0AC")
-        static let beige300 = Color(hex: "#D9B98A")
-        static let beige400 = Color(hex: "#C8A06A")  // Hero beige
-        static let beige500 = Color(hex: "#A87F4A")
-        static let beige600 = Color(hex: "#86643A")
-        static let beige700 = Color(hex: "#5E472A")
+        // === Brand: Caramel/Tan (from mascot) ===
+        static let caramel50  = Color(hex: "#FAF1E2")
+        static let caramel100 = Color(hex: "#F3DCB9")
+        static let caramel200 = Color(hex: "#E9C390")
+        static let caramel300 = Color(hex: "#DCA968")
+        static let caramel400 = Color(hex: "#C68F4A")  // mascot tone
+        static let caramel500 = Color(hex: "#A87538")
+        static let caramel600 = Color(hex: "#855B2A")
+        static let caramel700 = Color(hex: "#5F4220")
 
-        // === Orange (DATA ONLY — for "hard stool" log category) ===
-        // Do NOT use these for UI accents, buttons, or selected states.
-        static let orange50  = Color(hex: "#FFF1E3")
-        static let orange100 = Color(hex: "#FFDDB8")
-        static let orange200 = Color(hex: "#FFC489")
-        static let orange300 = Color(hex: "#FFAB5C")
-        static let orange400 = Color(hex: "#F58A33")
-        static let orange500 = Color(hex: "#E5731C")
-        static let orange600 = Color(hex: "#C95C0F")
-        static let orange700 = Color(hex: "#9F4708")
+        // === Surface: Cream ===
+        static let cream      = Color(hex: "#F6F1E7")
+        static let creamSoft  = Color(hex: "#FBF7EE")
+        static let paper      = Color(hex: "#FFFCF6")
 
-        // Primary aliases — BLUE is primary (mascot is blue), beige is secondary
-        static let primary     = iconBlue400
-        static let primaryDark = iconBlue500
-        static let accent      = beige400
+        // === Text: Espresso (deep warm brown, not black) ===
+        static let espresso       = Color(hex: "#2A201A")
+        static let espressoMid    = Color(hex: "#5C4E44")
+        static let espressoLight  = Color(hex: "#8C8077")
 
-        // === Background — mesh-friendly base colors ===
-        // Mesh uses iconBlue400 + orange400. These solid colors exist as fallbacks
-        // when a view sits over a card and not directly on the mesh.
-        static let background          = orange50    // Fallback solid for sheets/modals
-        static let backgroundSecondary = iconBlue50
-        static let cardBackground      = Color.white  // For sheets/modals only
+        // === Data Colors — modern vivid palette. Used ONLY in data viz. Never chrome. ===
+        // Inspired by Superpower-style biomarker palette: mint + lemon + bubblegum + sky.
+        static let dataGreen   = Color(hex: "#5AD9A1")  // mint, Bristol 3-4 healthy
+        static let dataYellow  = Color(hex: "#F0E869")  // lemon, Bristol 5 caution / "okay"
+        static let dataPink    = Color(hex: "#F4A5C8")  // bubblegum, Bristol 1-2 hard
+        static let dataBlue    = Color(hex: "#7FC8E0")  // sky, Bristol 6 loose
+        static let dataLiquid  = Color(hex: "#4A95B8")  // deeper blue, Bristol 7 watery
 
-        // === Mesh gradient anchor colors ===
-        static let meshOrange = orange400
-        static let meshBlue   = iconBlue400
-        static let meshDeep   = iconBlue600   // Used for vignette / depth corners
-        static let meshWarm   = orange300     // Light warm spot
+        // Legacy data aliases — old code uses these names, point at new colors.
+        static let dataAmber   = dataYellow
+        static let dataCoral   = dataPink
+        static let dataLoose   = dataBlue
 
-        // === Accent Colors ===
-        static let coral    = Color(hex: "#FF6B6B")
-        static let amber    = Color(hex: "#FFB800")
-        static let mint     = Color(hex: "#34D399")
-        static let lavender = Color(hex: "#A78BFA")
-        static let rose     = Color(hex: "#FB7185")
-        static let peach    = orange300
+        // === Semantic primaries ===
+        static let primary     = babyBlue400
+        static let primaryDark = babyBlue600
+        static let accent      = caramel400
+        static let background  = cream
+        static let surface     = paper
 
-        static let electric = Color(hex: "#FFF100")
+        // Brand pop blue — reserved for premium accents (Pro etc)
+        static let popBlue = babyBlue400
 
-        // === Pastel Day Card Colors (used by existing calendar code) ===
-        static let pastelOlive    = Color(hex: "#D4D9A0")
-        static let pastelMauve    = Color(hex: "#D4A9B8")
-        static let pastelSky      = iconBlue200
-        static let pastelLavender = Color(hex: "#C4B5D4")
-        static let pastelSage     = Color(hex: "#B8D4B8")
-        static let pastelPeach    = Color(hex: "#F0D0B0")
-        static let pastelBlush    = Color(hex: "#E8C0C8")
+        // === Log categories — use data palette ===
+        static let good   = dataGreen
+        static let hard   = dataCoral
+        static let loose  = dataLoose
+        static let blood  = Color(hex: "#EF4444")
+        static let amber  = dataAmber
+        static let mint   = dataGreen
+        static let coral  = dataCoral
 
-        static let dayCardColors: [Color] = [
-            pastelOlive, pastelMauve, pastelSky, pastelLavender,
-            pastelSage, pastelPeach, pastelBlush
-        ]
-
-        // === Category Colors ===
-        static let good  = mint
-        static let hard  = orange400
-        static let loose = iconBlue600       // Darker blue, distinct from mascot light blue
-        static let blood = Color(hex: "#EF4444")
-
-        // === Metric Colors ===
-        static let hydration = iconBlue600   // Darker blue, distinct from mascot light blue
-        static let fiber     = orange400     // Same warm orange as "hard" log — fiber is earthy
-        static let warning   = coral
-
-        // === Special POP accent — RESERVED for premium/Pro features ===
-        // Same as the mascot/app logo blue. Use sparingly to keep it special.
-        static let popBlue = iconBlue400
-
-        // Semantic aliases
-        static let green  = mint
-        static let orange = orange400
-        static let blue   = iconBlue400
-        static let red    = blood
-        static let yellow = amber
+        // === Metric colors (legacy compat) ===
+        static let hydration = dataLoose
+        static let fiber     = caramel500
+        static let warning   = dataCoral
+        static let lavender  = Color(hex: "#A78BFA")
+        static let rose      = Color(hex: "#FB7185")
+        static let peach     = caramel300
+        static let electric  = Color(hex: "#FFF100")
 
         // === Neutrals ===
         static let neutral50  = Color(hex: "#FAFAF8")
@@ -124,68 +99,125 @@ struct Theme {
         static let neutral400 = Color(hex: "#9B9792")
         static let neutral500 = Color(hex: "#6E6A65")
         static let neutral700 = Color(hex: "#3D3A36")
-        static let neutral900 = Color(hex: "#1C1B19")
+        static let neutral900 = Color(hex: "#1A1612")  // FAB / button "black"
 
-        // Legacy neutral aliases
         static let neutral      = neutral400
         static let neutralLight = neutral300
         static let neutralDark  = neutral700
 
-        // === Text Colors ===
-        // Dark text reads well on the mesh (orange warm zone) and on glass cards
-        static let textPrimary   = Color(hex: "#1C1B19")
-        static let textSecondary = Color(hex: "#5A554F")
-        static let textTertiary  = Color(hex: "#8A847C")
-        static let textOnPrimary = Color.white
-        static let textOnBlue    = Color(hex: "#1C1B19")
-        static let textDark      = Color(hex: "#1C1B19")
-        static let textOnGlass   = Color(hex: "#1C1B19")  // Text rendered over glass cards
-        static let textOnMesh    = Color(hex: "#1C1B19")  // Text rendered directly on mesh
+        // === Text aliases (legacy compat) ===
+        static let textPrimary    = espresso
+        static let textSecondary  = espressoMid
+        static let textTertiary   = espressoLight
+        static let textOnPrimary  = Color.white
+        static let textOnBlue     = espresso
+        static let textDark       = espresso
+        static let textOnGlass    = espresso
+        static let textOnMesh     = espresso
 
-        // === Card Accent Tints ===
-        static let tealTint  = iconBlue50
-        static let blueTint  = iconBlue50
-        static let amberTint = Color(hex: "#FEF7E8")
-        static let pinkTint  = Color(hex: "#FDE8EE")
-        static let greenTint = Color(hex: "#E8F5EC")
+        // === Background aliases (legacy compat) ===
+        static let backgroundSecondary = creamSoft
+        static let cardBackground      = paper
 
-        // === Tab Bar (legacy — still used by some old code paths) ===
-        static let tabBarBackground = Color.white
-        static let tabBarSelected   = neutral900
-        static let tabBarUnselected = neutral400
+        // === Mesh tokens (legacy compat — we don't use mesh anymore) ===
+        static let meshOrange = caramel400
+        static let meshBlue   = babyBlue400
+        static let meshDeep   = babyBlue600
+        static let meshWarm   = caramel300
 
-        // === Legacy Blue Aliases (compat for views referencing skyBlue*) ===
-        static let skyBlue50  = iconBlue50
-        static let skyBlue100 = iconBlue100
-        static let skyBlue200 = iconBlue200
-        static let skyBlue300 = iconBlue300
-        static let skyBlue400 = iconBlue400
-        static let skyBlue500 = iconBlue500
-        static let skyBlue600 = iconBlue600
-        static let skyBlue700 = iconBlue700
-        static let blue300 = iconBlue200
-        static let blue400 = iconBlue300
-        static let blue500 = iconBlue400
-        static let blue600 = iconBlue500
-        static let blue700 = iconBlue600
-        static let blue800 = iconBlue700
-        static let blue900 = neutral900
-        static let blue50  = iconBlue50
-        static let blue100 = iconBlue100
+        // === Card tints (legacy compat) ===
+        static let tealTint   = babyBlue50
+        static let blueTint   = babyBlue50
+        static let amberTint  = Color(hex: "#FEF7E8")
+        static let pinkTint   = Color(hex: "#FDE8EE")
+        static let greenTint  = Color(hex: "#E8F5EC")
 
-        // === Chart Colors ===
-        static let chart1 = iconBlue400
-        static let chart2 = mint
-        static let chart3 = orange400
+        // === Tab bar (legacy compat) ===
+        static let tabBarBackground = paper
+        static let tabBarSelected   = espresso
+        static let tabBarUnselected = espressoLight
+
+        // === Pastel day card colors (calendar) ===
+        static let pastelOlive    = Color(hex: "#D4D9A0")
+        static let pastelMauve    = Color(hex: "#D4A9B8")
+        static let pastelSky      = babyBlue200
+        static let pastelLavender = Color(hex: "#C4B5D4")
+        static let pastelSage     = Color(hex: "#B8D4B8")
+        static let pastelPeach    = caramel200
+        static let pastelBlush    = Color(hex: "#E8C0C8")
+
+        static let dayCardColors: [Color] = [
+            pastelOlive, pastelMauve, pastelSky, pastelLavender,
+            pastelSage, pastelPeach, pastelBlush
+        ]
+
+        // === Chart palette ===
+        static let chart1 = babyBlue400
+        static let chart2 = dataGreen
+        static let chart3 = caramel400
         static let chart4 = lavender
-        static let chart5 = coral
+        static let chart5 = dataCoral
 
-        // === Gut Sense Ring Segment Colors (legacy compat) ===
-        static let gutHydration   = iconBlue400
-        static let gutFiber       = orange400
-        static let gutConsistency = mint
+        // === Gut sense ring (legacy compat) ===
+        static let gutHydration   = dataLoose
+        static let gutFiber       = caramel500
+        static let gutConsistency = dataGreen
         static let gutRegularity  = lavender
         static let gutBalance     = rose
+
+        // === Legacy iconBlue / beige / orange aliases ===
+        static let iconBlue50  = babyBlue50
+        static let iconBlue100 = babyBlue100
+        static let iconBlue200 = babyBlue200
+        static let iconBlue300 = babyBlue300
+        static let iconBlue400 = babyBlue400
+        static let iconBlue500 = babyBlue500
+        static let iconBlue600 = babyBlue600
+        static let iconBlue700 = babyBlue700
+
+        static let beige50  = caramel50
+        static let beige100 = caramel100
+        static let beige200 = caramel200
+        static let beige300 = caramel300
+        static let beige400 = caramel400
+        static let beige500 = caramel500
+        static let beige600 = caramel600
+        static let beige700 = caramel700
+
+        static let orange50  = Color(hex: "#FFF1E3")
+        static let orange100 = Color(hex: "#FFDDB8")
+        static let orange200 = Color(hex: "#FFC489")
+        static let orange300 = caramel300
+        static let orange400 = dataCoral
+        static let orange500 = Color(hex: "#E5731C")
+        static let orange600 = Color(hex: "#C95C0F")
+        static let orange700 = Color(hex: "#9F4708")
+
+        static let skyBlue50  = babyBlue50
+        static let skyBlue100 = babyBlue100
+        static let skyBlue200 = babyBlue200
+        static let skyBlue300 = babyBlue300
+        static let skyBlue400 = babyBlue400
+        static let skyBlue500 = babyBlue500
+        static let skyBlue600 = babyBlue600
+        static let skyBlue700 = babyBlue700
+
+        static let blue300 = babyBlue200
+        static let blue400 = babyBlue300
+        static let blue500 = babyBlue400
+        static let blue600 = babyBlue500
+        static let blue700 = babyBlue600
+        static let blue800 = babyBlue700
+        static let blue900 = neutral900
+        static let blue50  = babyBlue50
+        static let blue100 = babyBlue100
+
+        // Semantic aliases
+        static let green   = dataGreen
+        static let orange  = dataCoral
+        static let blue    = babyBlue400
+        static let red     = blood
+        static let yellow  = dataAmber
     }
 
     // MARK: - Typography (Plus Jakarta Sans)
@@ -235,7 +267,7 @@ struct Theme {
         static let xl: CGFloat = 28
         static let pill: CGFloat = 100
         static let bottomCard: CGFloat = 32
-        static let glass: CGFloat = 28   // default radius for glass cards
+        static let glass: CGFloat = 24
     }
 
     // MARK: - Shadows
@@ -244,21 +276,21 @@ struct Theme {
         static func card<V: View>(_ view: V) -> some View {
             view
                 .compositingGroup()
-                .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 4)
-                .shadow(color: Color.black.opacity(0.02), radius: 4, x: 0, y: 1)
+                .shadow(color: Color.black.opacity(0.05), radius: 14, x: 0, y: 6)
+                .shadow(color: Color.black.opacity(0.02), radius: 3, x: 0, y: 1)
         }
 
         static func floating<V: View>(_ view: V) -> some View {
             view
                 .compositingGroup()
-                .shadow(color: Color.black.opacity(0.12), radius: 20, x: 0, y: 8)
-                .shadow(color: Color.black.opacity(0.05), radius: 6, x: 0, y: 2)
+                .shadow(color: Color.black.opacity(0.10), radius: 20, x: 0, y: 8)
+                .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
         }
 
         static func subtle<V: View>(_ view: V) -> some View {
             view
                 .compositingGroup()
-                .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
+                .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
         }
 
         static func glow<V: View>(_ view: V, color: Color = Colors.primary) -> some View {
@@ -271,7 +303,7 @@ struct Theme {
             view
                 .compositingGroup()
                 .shadow(color: Color.white.opacity(0.7), radius: 6, x: -3, y: -3)
-                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 4, y: 4)
+                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 4, y: 4)
         }
     }
 
@@ -293,27 +325,42 @@ struct Theme {
     // MARK: - Haptics
 
     struct Haptics {
-        static func light()  { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
-        static func medium() { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
-        static func heavy()  { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
-        static func success() { UINotificationFeedbackGenerator().notificationOccurred(.success) }
+        static func light()     { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
+        static func medium()    { UIImpactFeedbackGenerator(style: .medium).impactOccurred() }
+        static func heavy()     { UIImpactFeedbackGenerator(style: .heavy).impactOccurred() }
+        static func success()   { UINotificationFeedbackGenerator().notificationOccurred(.success) }
         static func selection() { UISelectionFeedbackGenerator().selectionChanged() }
     }
 }
 
-// MARK: - Frosted Sheet Background (for all modal sheets)
+// MARK: - Backgrounds
 
-/// Modal sheet background — soft beige whisper at top → gray base.
-/// Used on LogOptions, Profile, EditProfile, Export, Notification sheets.
-/// Pair with `.presentationBackground(.clear)`.
+/// v5 cream app surface. Static, solid cream.
+struct CreamBackground: View {
+    var body: some View {
+        Theme.Colors.cream.ignoresSafeArea()
+    }
+}
+
+/// Legacy alias — was a mesh background, now just cream.
+struct MeshBackground: View {
+    var body: some View {
+        CreamBackground()
+    }
+}
+
+/// Legacy alias — was a beige gradient, now just cream.
+struct InsightsBackground: View {
+    var body: some View {
+        CreamBackground()
+    }
+}
+
+/// Modal sheet background — slightly softer cream tint.
 struct FrostedSheetBackground: View {
     var body: some View {
         LinearGradient(
-            colors: [
-                Color(hex: "#F8EFE3"),  // soft warm beige whisper at top
-                Color(hex: "#F4F2EE"),  // mid blend
-                Color(hex: "#EFEDE8")   // gray base
-            ],
+            colors: [Theme.Colors.creamSoft, Theme.Colors.cream],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -321,56 +368,10 @@ struct FrostedSheetBackground: View {
     }
 }
 
-/// Insights tab background — same beige→gray gradient as modals (no blue).
-/// Heroes the warm/clean aesthetic for the data view.
-struct InsightsBackground: View {
-    var body: some View {
-        LinearGradient(
-            colors: [
-                Color(hex: "#F8EFE3"),
-                Color(hex: "#F4F2EE"),
-                Color(hex: "#EFEDE8")
-            ],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-        .ignoresSafeArea()
-    }
-}
+// MARK: - Soft Glass (Tiimo-minimal)
 
-// MARK: - Mesh Background
-
-/// Static pastel orange→blue mesh. Owns Home + Insights backgrounds.
-/// Intentionally non-animated so Liquid Glass can sample it cleanly.
-struct MeshBackground: View {
-    private var meshPoints: [SIMD2<Float>] {
-        [
-            SIMD2(0.0, 0.0), SIMD2(0.5, 0.0), SIMD2(1.0, 0.0),
-            SIMD2(0.0, 0.5), SIMD2(0.5, 0.5), SIMD2(1.0, 0.5),
-            SIMD2(0.0, 1.0), SIMD2(0.5, 1.0), SIMD2(1.0, 1.0)
-        ]
-    }
-
-    private var meshColors: [Color] {
-        // Soft beige + modal-gray whisper top → white middle → icon-blue bottom.
-        [
-            Color(hex: "#F8EFE3"),    Color(hex: "#F4F2EE"),    Color(hex: "#F8EFE3"),
-            Theme.Colors.beige50,     Color.white,              Theme.Colors.iconBlue100,
-            Theme.Colors.iconBlue500, Theme.Colors.iconBlue400, Theme.Colors.iconBlue300
-        ]
-    }
-
-    var body: some View {
-        MeshGradient(width: 3, height: 3, points: meshPoints, colors: meshColors)
-            .ignoresSafeArea()
-    }
-}
-
-// MARK: - Liquid Glass Primitive
-
-/// Pooply's signature frosted-glass surface.
-/// One unified recipe — looks identical on iOS 15 through iOS 26.
-/// Layers: ultraThinMaterial blur → strong white tint → top highlight gradient → border stroke.
+/// Subtle frosted glass — used surgically on tab bar, FAB, contained data widgets.
+/// Much lighter than v4 — barely-there material + soft white border.
 struct GlassSurface: ViewModifier {
     var radius: CGFloat = Theme.Radius.glass
     var tint: Color? = nil
@@ -378,51 +379,26 @@ struct GlassSurface: ViewModifier {
 
     func body(content: Content) -> some View {
         let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
-
         content
             .background(frostedFill(shape: shape))
             .overlay(borderStroke(shape: shape))
             .clipShape(shape)
+            // Tiimo-style soft lift — two-layer drop shadow.
+            // First layer creates the float; second is the contact edge.
+            .compositingGroup()
+            .shadow(color: Color.black.opacity(0.06), radius: 14, x: 0, y: 6)
+            .shadow(color: Color.black.opacity(0.025), radius: 3, x: 0, y: 1)
     }
 
     private func frostedFill(shape: RoundedRectangle) -> some View {
         ZStack {
-            // 1. Material blur (refracts what's behind, slightly)
             shape.fill(.ultraThinMaterial)
-
-            // 2. Strong white tint — gives the clean, light frosted look
-            shape.fill(Color.white.opacity(0.55))
-
-            // 3. Optional color tint for accent cards
+            // Lower white tint (was 0.40) so more of the material gray shows
+            // through — matches the D/W/M/Y toggle's look against cream.
+            shape.fill(Color.white.opacity(0.25))
             if let tint {
-                shape.fill(tint.opacity(0.10))
+                shape.fill(tint.opacity(0.08))
             }
-
-            // 4. Top-to-bottom highlight — subtle inner shine
-            shape.fill(
-                LinearGradient(
-                    colors: [
-                        Color.white.opacity(0.55),
-                        Color.white.opacity(0.10),
-                        Color.clear
-                    ],
-                    startPoint: .top,
-                    endPoint: .center
-                )
-            )
-
-            // 5. Bottom-left soft glow (catches the mesh color subtly)
-            shape.fill(
-                RadialGradient(
-                    colors: [
-                        Color.white.opacity(0.18),
-                        Color.clear
-                    ],
-                    center: .init(x: 0.15, y: 0.85),
-                    startRadius: 0,
-                    endRadius: 80
-                )
-            )
         }
         .allowsHitTesting(false)
     }
@@ -430,14 +406,12 @@ struct GlassSurface: ViewModifier {
     @ViewBuilder
     private func borderStroke(shape: RoundedRectangle) -> some View {
         if stroke {
-            // Solid white border. Visible/thick enough to make cards pop crisply.
-            shape.stroke(Color.white, lineWidth: 2)
+            shape.stroke(Color.white.opacity(0.55), lineWidth: 1.6)
         }
     }
 }
 
 extension View {
-    /// Apply Pooply's Liquid Glass surface (iOS 26 real, iOS 18 material fallback).
     func glassSurface(
         radius: CGFloat = Theme.Radius.glass,
         tint: Color? = nil,
@@ -447,9 +421,8 @@ extension View {
     }
 }
 
-// MARK: - GlassCard
+// MARK: - Glass Containers
 
-/// Padded glass container. Use for metric cards, info panels, etc.
 struct GlassCard<Content: View>: View {
     let content: Content
     var padding: CGFloat = Theme.Spacing.cardPadding
@@ -473,8 +446,6 @@ struct GlassCard<Content: View>: View {
     }
 }
 
-// MARK: - GlassPill (bottom-left nav selector)
-
 struct GlassPill<Content: View>: View {
     let content: Content
     init(@ViewBuilder content: () -> Content) {
@@ -489,8 +460,9 @@ struct GlassPill<Content: View>: View {
     }
 }
 
-// MARK: - GlassFAB (bottom-right log button)
+// MARK: - Black FAB
 
+/// Solid black floating action button. Brandon's spec: stays black.
 struct GlassFAB: View {
     let action: () -> Void
     @State private var pressed: Bool = false
@@ -501,100 +473,271 @@ struct GlassFAB: View {
             action()
         } label: {
             Image(systemName: "plus")
-                .font(.system(size: 26, weight: .heavy))
+                .font(.system(size: 24, weight: .heavy))
                 .foregroundStyle(.white)
-                .scaleEffect(pressed ? 0.85 : 1.0)
-                .rotationEffect(.degrees(pressed ? -8 : 0))
-                .frame(width: 64, height: 64)
+                .frame(width: 60, height: 60)
                 .background(Circle().fill(Theme.Colors.neutral900))
                 .scaleEffect(pressed ? 0.92 : 1.0)
         }
         .buttonStyle(.plain)
         .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { isPressing in
-            withAnimation(Theme.Animation.press) {
-                pressed = isPressing
-            }
+            withAnimation(Theme.Animation.press) { pressed = isPressing }
         }, perform: {})
-        .shadow(color: Color.black.opacity(0.20), radius: 12, x: 0, y: 6)
+        .shadow(color: Color.black.opacity(0.18), radius: 12, x: 0, y: 6)
     }
 }
 
-// MARK: - GlassNavPill (Home / Insights selector)
+// MARK: - App Pages + Floating Glass Tab Bar
 
 enum AppPage: Hashable, CaseIterable {
     case home
-    case insights
+    case trends
+    // Chat (Coach Lee) hidden for beta launch — re-enable by uncommenting
+    // this case and the matching arms below, plus the `.coach` case in
+    // ContentView's body switch.
+    // case coach
 
     var label: String {
         switch self {
-        case .home: return "Home"
-        case .insights: return "Data"
+        case .home:   return "Home"
+        case .trends: return "Trends"
+        // case .coach:  return "Coach"
         }
     }
 
     var iconFilled: String {
         switch self {
-        case .home: return "house.fill"
-        case .insights: return "chart.bar.fill"
+        case .home:   return "house.fill"
+        case .trends: return "chart.bar.fill"
+        // case .coach:  return "message.fill"
         }
     }
 
     var iconOutline: String {
         switch self {
-        case .home: return "house"
-        case .insights: return "chart.bar"
+        case .home:   return "house"
+        case .trends: return "chart.bar"
+        // case .coach:  return "message"
         }
     }
 }
 
+/// Floating frosted-glass tab pill. Three tabs. Lives bottom-left.
+/// Black FAB pinned to the right of this in the row container.
 struct GlassNavPill: View {
     @Binding var selected: AppPage
     @Namespace private var ns
 
     var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 2) {
             ForEach(AppPage.allCases, id: \.self) { page in
                 Button {
                     Theme.Haptics.selection()
-                    withAnimation(Theme.Animation.tabSlide) {
-                        selected = page
-                    }
+                    withAnimation(Theme.Animation.tabSlide) { selected = page }
                 } label: {
                     HStack(spacing: 6) {
                         Image(systemName: selected == page ? page.iconFilled : page.iconOutline)
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: 15, weight: .semibold))
                             .symbolEffect(.bounce, value: selected == page)
-                        Text(page.label)
-                            .font(Theme.Fonts.captionBold(13))
+                        if selected == page {
+                            Text(page.label)
+                                .font(Theme.Fonts.captionBold(13))
+                                .transition(.opacity.combined(with: .scale(scale: 0.85)))
+                        }
                     }
-                    .foregroundStyle(selected == page ? .white : Color.white.opacity(0.45))
-                    .padding(.horizontal, 16)
+                    .foregroundStyle(selected == page ? Theme.Colors.espresso : Theme.Colors.espressoLight)
+                    .padding(.horizontal, selected == page ? 14 : 12)
                     .padding(.vertical, 10)
                     .background(
                         ZStack {
                             if selected == page {
                                 Capsule()
-                                    .fill(Color.white.opacity(0.15))
-                                    .matchedGeometryEffect(id: "pill_selection", in: ns)
+                                    .fill(Color.white.opacity(0.85))
+                                    .matchedGeometryEffect(id: "tab_selection", in: ns)
                             }
                         }
                     )
+                    .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 6)
-        .background(
-            Capsule().fill(Theme.Colors.neutral900)
-        )
-        .shadow(color: Color.black.opacity(0.18), radius: 14, x: 0, y: 6)
+        .background(navPillBackground)
+        .shadow(color: Color.black.opacity(0.10), radius: 16, x: 0, y: 6)
+        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 1)
+    }
+
+    @ViewBuilder
+    private var navPillBackground: some View {
+        Capsule()
+            .fill(.ultraThinMaterial)
+            .overlay(Capsule().fill(Color.white.opacity(0.30)))
+            .overlay(Capsule().stroke(Color.white.opacity(0.55), lineWidth: 1))
     }
 }
 
-// MARK: - Reusable Components (legacy compat + new)
+// MARK: - Mascot Avatar
 
-/// Standard card container — now glass-backed
+/// Clean circular mascot avatar. No halo — Brandon explicitly nixed the halo idea.
+struct MascotAvatar: View {
+    var size: CGFloat = 52
+    let action: () -> Void
+    @State private var pressed: Bool = false
+
+    var body: some View {
+        Button {
+            Theme.Haptics.light()
+            action()
+        } label: {
+            Image("appLogo")
+                .resizable()
+                .scaledToFill()
+                .frame(width: size - 6, height: size - 6)
+                .clipShape(Circle())
+                .padding(3)
+                .background(Circle().fill(Color.white))
+                .scaleEffect(pressed ? 0.94 : 1.0)
+        }
+        .buttonStyle(.plain)
+        .shadow(color: Color.black.opacity(0.06), radius: 5, x: 0, y: 2)
+        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { isPressing in
+            withAnimation(Theme.Animation.press) { pressed = isPressing }
+        }, perform: {})
+    }
+}
+
+struct MascotCircle: View {
+    var size: CGFloat = 44
+    var body: some View {
+        Image("lee")
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+    }
+}
+
+// MARK: - Pooply v5 — Shared Components
+
+/// Floating delta indicator, e.g. "▲ +3 from last week".
+/// Lives near the top-right of Home, floating on cream (no card).
+struct TrendChip: View {
+    let delta: Int
+    var label: String = "from last week"
+
+    private var isUp: Bool { delta >= 0 }
+    private var color: Color {
+        if delta == 0 { return Theme.Colors.espressoMid }
+        return isUp ? Theme.Colors.dataGreen : Theme.Colors.dataCoral
+    }
+    private var symbol: String { isUp ? "+" : "" }
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: delta == 0
+                  ? "minus"
+                  : (isUp ? "arrow.up.right" : "arrow.down.right"))
+                .font(.system(size: 10, weight: .bold))
+            Text("\(symbol)\(delta) \(label)")
+                .font(Theme.Fonts.captionBold(12))
+        }
+        .foregroundStyle(color)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 6)
+        .background(Capsule().fill(color.opacity(0.12)))
+        .overlay(Capsule().stroke(color.opacity(0.18), lineWidth: 0.5))
+    }
+}
+
+/// Bristol-type colored dot for the "Last 7" strip on Home.
+struct BristolDot: View {
+    let type: Log.PoopType?
+    var size: CGFloat = 18
+
+    private var color: Color {
+        guard let type else { return Theme.Colors.neutral200 }
+        switch type {
+        case .smoothSausage, .crackedSausage:   return Theme.Colors.dataGreen   // 3-4
+        case .softBlobs:                        return Theme.Colors.dataAmber   // 5
+        case .separateHardLumps, .lumpySausage: return Theme.Colors.dataCoral   // 1-2
+        case .fluffyPieces:                     return Theme.Colors.dataLoose   // 6
+        case .watery:                           return Theme.Colors.dataLiquid  // 7
+        }
+    }
+
+    var body: some View {
+        Circle()
+            .fill(color)
+            .frame(width: size, height: size)
+            .overlay(
+                Circle()
+                    .fill(Color.white.opacity(0.25))
+                    .scaleEffect(0.45)
+                    .offset(x: -size * 0.18, y: -size * 0.18)
+            )
+    }
+}
+
+/// Custom Pooply Green Zone leaf. Used on the Streak card as its identity icon.
+struct GreenZoneLeaf: View {
+    var size: CGFloat = 32
+    var color: Color = Theme.Colors.dataGreen
+
+    var body: some View {
+        ZStack {
+            LeafShape()
+                .fill(
+                    LinearGradient(
+                        colors: [color, color.opacity(0.72)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                )
+            // Subtle vein line down center
+            LeafVein()
+                .stroke(Color.white.opacity(0.30), style: StrokeStyle(lineWidth: 1.2, lineCap: .round))
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+private struct LeafShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        let w = rect.width, h = rect.height
+        // Tilted teardrop pointing up-right
+        p.move(to: CGPoint(x: w * 0.20, y: h * 0.92))
+        p.addCurve(
+            to: CGPoint(x: w * 0.92, y: h * 0.20),
+            control1: CGPoint(x: w * 0.05, y: h * 0.55),
+            control2: CGPoint(x: w * 0.40, y: h * 0.08)
+        )
+        p.addCurve(
+            to: CGPoint(x: w * 0.20, y: h * 0.92),
+            control1: CGPoint(x: w * 0.96, y: h * 0.60),
+            control2: CGPoint(x: w * 0.60, y: h * 0.96)
+        )
+        p.closeSubpath()
+        return p
+    }
+}
+
+private struct LeafVein: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: rect.width * 0.25, y: rect.height * 0.85))
+        p.addQuadCurve(
+            to: CGPoint(x: rect.width * 0.85, y: rect.height * 0.25),
+            control: CGPoint(x: rect.width * 0.42, y: rect.height * 0.42)
+        )
+        return p
+    }
+}
+
+// MARK: - Reusable Components (preserved API)
+
 struct CardView<Content: View>: View {
     let content: Content
     var padding: CGFloat = Theme.Spacing.cardPadding
@@ -615,7 +758,6 @@ struct CardView<Content: View>: View {
     }
 }
 
-/// Tinted accent card (legacy)
 struct AccentCard<Content: View>: View {
     let tint: Color
     let content: Content
@@ -639,13 +781,12 @@ struct AccentCard<Content: View>: View {
     }
 }
 
-/// Mini stat card for metrics — glass-backed
 struct StatCard: View {
     let value: String
     let label: String
     let icon: String?
     let iconColor: Color
-    var valueColor: Color = Theme.Colors.textOnGlass
+    var valueColor: Color = Theme.Colors.espresso
     var showRing: Bool = false
     var ringProgress: CGFloat = 0
     var ringColor: Color = Theme.Colors.primary
@@ -654,7 +795,7 @@ struct StatCard: View {
          label: String,
          icon: String? = nil,
          iconColor: Color = Theme.Colors.primary,
-         valueColor: Color = Theme.Colors.textOnGlass,
+         valueColor: Color = Theme.Colors.espresso,
          showRing: Bool = false,
          ringProgress: CGFloat = 0,
          ringColor: Color = Theme.Colors.primary) {
@@ -679,7 +820,6 @@ struct StatCard: View {
                         .stroke(ringColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                         .rotationEffect(.degrees(-90))
                 }
-
                 if let iconName = icon {
                     Image(systemName: iconName)
                         .font(.system(size: 22, weight: .bold))
@@ -693,7 +833,6 @@ struct StatCard: View {
                     .font(Theme.Fonts.heading(22))
                     .foregroundStyle(valueColor)
                     .contentTransition(.numericText())
-
                 Text(label.uppercased())
                     .font(Theme.Fonts.label(10))
                     .foregroundStyle(Theme.Colors.textTertiary)
@@ -706,7 +845,6 @@ struct StatCard: View {
     }
 }
 
-/// Primary action button — orange, dark text
 struct PrimaryButton: View {
     let title: String
     let action: () -> Void
@@ -733,14 +871,13 @@ struct PrimaryButton: View {
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
-            .background(Theme.Colors.primary)
+            .background(Theme.Colors.neutral900)
             .clipShape(Capsule())
         }
         .disabled(isLoading)
     }
 }
 
-/// Secondary glass button
 struct SecondaryButton: View {
     let title: String
     let action: () -> Void
@@ -759,7 +896,7 @@ struct SecondaryButton: View {
                 Text(title)
                     .font(Theme.Fonts.bodyBold())
             }
-            .foregroundStyle(Theme.Colors.textOnGlass)
+            .foregroundStyle(Theme.Colors.espresso)
             .frame(maxWidth: .infinity)
             .frame(height: 52)
             .glassSurface(radius: Theme.Radius.pill)
@@ -767,7 +904,6 @@ struct SecondaryButton: View {
     }
 }
 
-/// Chip/Tag selector
 struct ChipSelector: View {
     let options: [String]
     @Binding var selected: String
@@ -797,7 +933,7 @@ struct ChipButton: View {
         }) {
             Text(title)
                 .font(Theme.Fonts.captionBold())
-                .foregroundStyle(isSelected ? .white : Theme.Colors.textOnGlass.opacity(0.6))
+                .foregroundStyle(isSelected ? Theme.Colors.espresso : Theme.Colors.espressoLight)
                 .padding(.horizontal, Theme.Spacing.md)
                 .padding(.vertical, Theme.Spacing.sm)
                 .background(
@@ -813,7 +949,6 @@ struct ChipButton: View {
     }
 }
 
-/// Section header
 struct SectionHeader: View {
     let title: String
     var action: (() -> Void)? = nil
@@ -824,22 +959,19 @@ struct SectionHeader: View {
         HStack {
             Text(title)
                 .font(Theme.Fonts.heading())
-                .foregroundStyle(onDark ? .white : Theme.Colors.textOnGlass)
-
+                .foregroundStyle(onDark ? .white : Theme.Colors.espresso)
             Spacer()
-
             if let action = action {
                 Button(action: action) {
                     Text(actionTitle)
                         .font(Theme.Fonts.captionBold())
-                        .foregroundStyle(Theme.Colors.primary)
+                        .foregroundStyle(Theme.Colors.espresso)
                 }
             }
         }
     }
 }
 
-/// Close button for modals — glass
 struct CloseButton: View {
     let action: () -> Void
 
@@ -850,14 +982,13 @@ struct CloseButton: View {
         }) {
             Image(systemName: "xmark")
                 .font(.system(size: 14, weight: .bold))
-                .foregroundStyle(Theme.Colors.textOnGlass)
+                .foregroundStyle(Theme.Colors.espresso)
                 .frame(width: 36, height: 36)
                 .glassSurface(radius: 18)
         }
     }
 }
 
-/// Category indicator dot
 struct CategoryDot: View {
     let category: Log.PoopCategory
     var size: CGFloat = 10
@@ -865,8 +996,8 @@ struct CategoryDot: View {
     var color: Color {
         switch category {
         case .regular: return Theme.Colors.good
-        case .hard: return Theme.Colors.hard
-        case .loose: return Theme.Colors.loose
+        case .hard:    return Theme.Colors.hard
+        case .loose:   return Theme.Colors.loose
         }
     }
 
@@ -877,57 +1008,11 @@ struct CategoryDot: View {
     }
 }
 
-// MARK: - Mascot Avatar (top-right of Home)
-
-/// Circular avatar using the app logo (blue). Solid white ring, subtle shadow.
-struct MascotAvatar: View {
-    var size: CGFloat = 52
-    let action: () -> Void
-    @State private var pressed: Bool = false
-
-    var body: some View {
-        Button {
-            Theme.Haptics.light()
-            action()
-        } label: {
-            Image("appLogo")
-                .resizable()
-                .scaledToFill()
-                .frame(width: size - 6, height: size - 6)
-                .clipShape(Circle())
-                .padding(3)
-                .background(Circle().fill(Color.white))
-                .scaleEffect(pressed ? 0.94 : 1.0)
-        }
-        .buttonStyle(.plain)
-        .shadow(color: Color.black.opacity(0.08), radius: 4, x: 0, y: 2)
-        .onLongPressGesture(minimumDuration: 0, maximumDistance: .infinity, pressing: { isPressing in
-            withAnimation(Theme.Animation.press) {
-                pressed = isPressing
-            }
-        }, perform: {})
-    }
-}
-
-/// Legacy mascot circle (used in old code paths) — kept for compat
-struct MascotCircle: View {
-    var size: CGFloat = 44
-
-    var body: some View {
-        Image("lee")
-            .resizable()
-            .scaledToFit()
-            .frame(width: size, height: size)
-            .clipShape(Circle())
-    }
-}
-
-// MARK: - Elevated Button Style (3D press)
+// MARK: - Button Styles
 
 struct ElevatedButtonStyle: ButtonStyle {
-    var color: Color = Theme.Colors.primary
+    var color: Color = Theme.Colors.neutral900
     var height: CGFloat = 56
-
     private var darkerColor: Color { color.opacity(0.7) }
 
     func makeBody(configuration: Configuration) -> some View {
@@ -951,12 +1036,10 @@ struct ElevatedButtonStyle: ButtonStyle {
 }
 
 extension View {
-    func elevatedButtonStyle(color: Color = Theme.Colors.primary, height: CGFloat = 56) -> some View {
+    func elevatedButtonStyle(color: Color = Theme.Colors.neutral900, height: CGFloat = 56) -> some View {
         self.buttonStyle(ElevatedButtonStyle(color: color, height: height))
     }
 }
-
-// MARK: - Bouncy Button Style
 
 struct BouncyButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
@@ -967,7 +1050,7 @@ struct BouncyButtonStyle: ButtonStyle {
     }
 }
 
-// MARK: - View Modifiers
+// MARK: - View Extensions
 
 extension View {
     func screenPadding() -> some View {
@@ -978,78 +1061,63 @@ extension View {
         self.buttonStyle(BouncyButtonStyle())
     }
 
-    /// Legacy neumorphic shadow — kept for compat with un-rewritten views
     func neumorphicShadow() -> some View {
         self
             .compositingGroup()
             .shadow(color: Color.white.opacity(0.7), radius: 6, x: -3, y: -3)
-            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 4, y: 4)
+            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 4, y: 4)
     }
 }
 
-// Note: cardShadow(), floatingShadow(), subtleShadow() are defined in Extensions.swift
+// Note: cardShadow(), floatingShadow(), subtleShadow() live in Extensions.swift
 
 // MARK: - Preview
 
-#Preview("Design System v4") {
+#Preview("Design System v5") {
     ZStack {
-        MeshBackground()
-
+        CreamBackground()
         ScrollView {
             VStack(spacing: 24) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Nice to see you,")
-                            .font(Theme.Fonts.body())
-                            .foregroundStyle(Theme.Colors.textOnMesh.opacity(0.7))
-                        Text("Brandon")
-                            .font(Theme.Fonts.title())
-                            .foregroundStyle(Theme.Colors.textOnMesh)
+                        Text("Pooply")
+                            .font(Theme.Fonts.title(28))
+                            .foregroundStyle(Theme.Colors.espresso)
                     }
                     Spacer()
                     MascotAvatar { }
                 }
 
-                VStack(spacing: 8) {
-                    Text("Poop Score")
-                        .font(Theme.Fonts.subheading())
-                        .foregroundStyle(Theme.Colors.textOnMesh)
-                    Text("88")
-                        .font(Theme.Fonts.hero(140))
-                        .foregroundStyle(Theme.Colors.textOnMesh)
+                VStack(spacing: 6) {
+                    Text("POOP SCORE  ·  LAST 7 DAYS")
+                        .font(Theme.Fonts.label(10))
+                        .tracking(1.3)
+                        .foregroundStyle(Theme.Colors.espressoLight)
+                    Text("84")
+                        .font(Theme.Fonts.hero(120))
+                        .foregroundStyle(Theme.Colors.espresso)
                 }
-                .padding(.vertical, 32)
+                .padding(.vertical, 24)
+
+                HStack(spacing: 10) {
+                    ForEach(0..<7) { _ in BristolDot(type: .smoothSausage) }
+                }
 
                 HStack(spacing: 12) {
-                    GlassCard {
-                        VStack(spacing: 4) {
-                            Text("72%").font(Theme.Fonts.heading())
-                            Text("HYDRATION").font(Theme.Fonts.label(10))
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-                    }
-                    GlassCard {
-                        VStack(spacing: 4) {
-                            Text("48%").font(Theme.Fonts.heading())
-                            Text("FIBER").font(Theme.Fonts.label(10))
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-                    }
-                    GlassCard {
-                        VStack(spacing: 4) {
-                            Text("0%").font(Theme.Fonts.heading())
-                            Text("BLOOD").font(Theme.Fonts.label(10))
-                                .foregroundStyle(Theme.Colors.textTertiary)
-                        }
-                    }
+                    GreenZoneLeaf(size: 28)
+                    Text("12 day Green Zone")
+                        .font(Theme.Fonts.bodyBold(15))
+                        .foregroundStyle(Theme.Colors.espresso)
                 }
+
+                TrendChip(delta: 3)
 
                 HStack {
                     GlassNavPill(selected: .constant(.home))
                     Spacer()
                     GlassFAB { }
                 }
-                .padding(.top, 32)
+                .padding(.top, 24)
             }
             .padding(Theme.Spacing.screenHorizontal)
         }

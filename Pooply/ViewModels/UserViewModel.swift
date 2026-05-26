@@ -14,13 +14,16 @@ class UserViewModel: ObservableObject {
 
     init(user: User, withDummyData: Bool = false) {
         self.user = user
-
+        // ⚠️ SCREENSHOT MODE — when `withDummyData` is true the saved logs are
+        // replaced in-memory with the dummy improvement-arc dataset. Dummy
+        // logs are NOT written back to UserDefaults, so killing the app and
+        // flipping the flag off restores the user's real data untouched.
+        // FLIP THIS OFF (set `withDummyData: false` at the call sites in
+        // PooplyApp.swift) BEFORE the App Store build.
         if withDummyData {
-            // TODO: Remove before release — forces dummy data for screenshots
             self.logHistory = Log.generateDummyData(count: 30)
         } else {
-            let savedLogs = UserDefaultsService.shared.loadLogs()
-            self.logHistory = savedLogs
+            self.logHistory = UserDefaultsService.shared.loadLogs()
         }
     }
     
@@ -1014,8 +1017,8 @@ class UserViewModel: ObservableObject {
                         priority: .low,
                         icon: "checkmark.seal.fill",
                         iconColor: Theme.Colors.good,
-                        title: "Textbook Bristol \(typeNum)",
-                        description: "You've had \(typeName) stool in \(dominant.value) of \(totalCount) logs \(periodLabel). That's exactly what a healthy gut looks like.",
+                        title: "High-Score Pattern",
+                        description: "\(dominantPct)% of your logs \(periodLabel) scored in the healthy range. That's exactly what a happy gut looks like.",
                         metric: "\(dominantPct)%",
                         actionable: nil
                     ))
@@ -1026,8 +1029,8 @@ class UserViewModel: ObservableObject {
                         priority: .high,
                         icon: "chart.pie.fill",
                         iconColor: Theme.Colors.hard,
-                        title: "Leaning Hard (Type 1–2)",
-                        description: "\(hardPct)% of your stool was Bristol Type 1 or 2 \(periodLabel) — that's the constipated end of the scale.",
+                        title: "Leaning Hard",
+                        description: "\(hardPct)% of your logs \(periodLabel) scored on the hard, low-score end — the constipated side. Your gut needs more help moving things through.",
                         metric: "\(hardPct)% hard",
                         actionable: "Bump up fiber, water, and try a 10-minute walk after meals"
                     ))
@@ -1038,8 +1041,8 @@ class UserViewModel: ObservableObject {
                         priority: .high,
                         icon: "chart.pie.fill",
                         iconColor: Theme.Colors.loose,
-                        title: "Leaning Loose (Type 5–7)",
-                        description: "\(loosePct)% of your stool was Bristol Type 5 to 7 \(periodLabel). Loose patterns can point to food sensitivities or stress.",
+                        title: "Leaning Loose",
+                        description: "\(loosePct)% of your logs \(periodLabel) scored loose. Loose patterns can point to food sensitivities or stress.",
                         metric: "\(loosePct)% loose",
                         actionable: "Try a low-FODMAP day and see if it settles"
                     ))
@@ -1307,6 +1310,130 @@ class UserViewModel: ObservableObject {
             return ("Dark Brown", "Dark brown is usually fine — common with iron-rich or protein-heavy meals.")
         case .mediumBrown:
             return ("Medium Brown", "Medium brown is the ideal — bile and bacteria doing their job.")
+        }
+    }
+
+    // MARK: - Pooply v5: Rolling Score + Green Zone
+
+    /// Headline Poop Score. Always rolling last 7 days regardless of UI timeframe.
+    var rollingPoopScore7Day: Int {
+        averagePoopScore(for: "WEEK")
+    }
+
+    /// Average score for the 7-day window before the current one — used for delta.
+    var previousWeekScore7Day: Int {
+        let cal = Calendar.current
+        let now = Date()
+        guard let twoWeeksAgo = cal.date(byAdding: .day, value: -14, to: now),
+              let oneWeekAgo = cal.date(byAdding: .day, value: -7, to: now) else { return 0 }
+        let prevLogs = logHistory.filter { $0.timestamp >= twoWeeksAgo && $0.timestamp < oneWeekAgo }
+        guard !prevLogs.isEmpty else { return 0 }
+        let total = prevLogs.reduce(0) { $0 + UserViewModel.calculatePoopScoreStatic(for: $1) }
+        return total / prevLogs.count
+    }
+
+    /// Delta between current rolling 7 and previous 7.
+    var poopScoreDelta7Day: Int {
+        let prev = previousWeekScore7Day
+        guard prev > 0 else { return 0 }
+        return rollingPoopScore7Day - prev
+    }
+
+    /// Last 7 *log days* — used for the home strip of colored dots.
+    /// Returns 7 elements, oldest first; nil for days with no log.
+    var last7DayDominantTypes: [Log.PoopType?] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        return (0..<7).map { offset -> Log.PoopType? in
+            guard let day = cal.date(byAdding: .day, value: -(6 - offset), to: today) else { return nil }
+            let logs = logHistory.filter { cal.isDate($0.timestamp, inSameDayAs: day) }
+            guard !logs.isEmpty else { return nil }
+            // Take the *worst* (lowest score) — that's the day's signal
+            return logs.min(by: { UserViewModel.calculatePoopScoreStatic(for: $0) < UserViewModel.calculatePoopScoreStatic(for: $1) })?.type
+        }
+    }
+
+    /// Is the date a Green Zone day? Bristol 3-5 + at least 1 log.
+    /// (Personal frequency baseline integrated later when onboarding ships.)
+    func isGreenZoneDay(_ date: Date) -> Bool {
+        let cal = Calendar.current
+        let logsForDay = logHistory.filter { cal.isDate($0.timestamp, inSameDayAs: date) }
+        guard !logsForDay.isEmpty else { return false }
+        return logsForDay.allSatisfy { isGreenZoneType($0.type) }
+    }
+
+    private func isGreenZoneType(_ type: Log.PoopType) -> Bool {
+        switch type {
+        case .smoothSausage, .crackedSausage, .softBlobs: return true  // Bristol 3, 4, 5
+        default: return false
+        }
+    }
+
+    /// Consecutive Green Zone days ending today (or yesterday if no logs yet today).
+    var greenZoneStreak: Int {
+        let cal = Calendar.current
+        var streak = 0
+        var dayCursor = cal.startOfDay(for: Date())
+
+        let todayHasLogs = !logHistory.filter { cal.isDate($0.timestamp, inSameDayAs: dayCursor) }.isEmpty
+        if !todayHasLogs {
+            guard let yesterday = cal.date(byAdding: .day, value: -1, to: dayCursor) else { return 0 }
+            dayCursor = yesterday
+        }
+
+        while isGreenZoneDay(dayCursor) {
+            streak += 1
+            guard let prev = cal.date(byAdding: .day, value: -1, to: dayCursor) else { break }
+            dayCursor = prev
+        }
+        return streak
+    }
+
+    /// % of last 30 days that were Green Zone days.
+    var greenZone30DayPercentage: Int {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        var greenCount = 0
+        for offset in 0..<30 {
+            guard let day = cal.date(byAdding: .day, value: -offset, to: today) else { continue }
+            if isGreenZoneDay(day) { greenCount += 1 }
+        }
+        return Int(Double(greenCount) / 30.0 * 100)
+    }
+
+    /// "3h ago", "2d ago", "just now" — human-readable time-since-last.
+    var timeSinceLastPoopString: String {
+        guard let last = lastLog else { return "—" }
+        let interval = Date().timeIntervalSince(last.timestamp)
+        if interval < 60   { return "just now" }
+        if interval < 3600 { return "\(Int(interval / 60))m ago" }
+        if interval < 86400 { return "\(Int(interval / 3600))h ago" }
+        return "\(Int(interval / 86400))d ago"
+    }
+
+    /// Bristol type number (1-7) — public for views.
+    func bristolTypeNumber(_ type: Log.PoopType) -> Int {
+        switch type {
+        case .separateHardLumps: return 1
+        case .lumpySausage:      return 2
+        case .crackedSausage:    return 3
+        case .smoothSausage:     return 4
+        case .softBlobs:         return 5
+        case .fluffyPieces:      return 6
+        case .watery:            return 7
+        }
+    }
+
+    /// Bristol type human label.
+    func bristolTypeLabel(_ type: Log.PoopType) -> String {
+        switch type {
+        case .separateHardLumps: return "Hard lumps"
+        case .lumpySausage:      return "Lumpy sausage"
+        case .crackedSausage:    return "Cracked sausage"
+        case .smoothSausage:     return "Smooth sausage"
+        case .softBlobs:         return "Soft blobs"
+        case .fluffyPieces:      return "Fluffy pieces"
+        case .watery:            return "Watery"
         }
     }
 }

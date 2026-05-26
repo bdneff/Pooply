@@ -120,57 +120,136 @@ struct TempDay: Identifiable {
 }
 
 extension Log {
+    /// Screenshot-ready dummy data with a clear improvement arc.
+    ///
+    /// The 30-day window is broken into four chapters so charts read as
+    /// "trending up":
+    ///   • Days 0–6   (this week)   — locked-in: 100% regular, fiber & hydration peak.
+    ///                                Drives a clean 7+ day streak.
+    ///   • Days 7–13  (last week)   — strong: ~90% regular, scores climbing.
+    ///   • Days 14–21 (week 3)      — improving: ~70% regular, mid-range scores.
+    ///   • Days 22–29 (week 4, oldest) — rough baseline: ~50% regular, sparser logs.
+    ///
+    /// `count` is interpreted as the number of DAYS to cover, not raw log count.
+    /// Multiple logs are added per day to give the frequency graph variation.
     static func generateDummyData(count: Int = 30) -> [Log] {
-        // Generally good data — scores should land in the "barely green" range
-        let healthyTypes: [PoopType] = [.smoothSausage, .crackedSausage, .smoothSausage, .crackedSausage]
-        let okTypes: [PoopType] = [.softBlobs, .lumpySausage, .fluffyPieces]
+        let calendar = Calendar.current
+        let now = Date()
 
-        let commonColors: [PoopColor] = [.mediumBrown, .mediumBrown, .darkBrown, .lightBrown]
+        let healthyTypes: [PoopType] = [.smoothSausage, .crackedSausage]
+        let okTypes:      [PoopType] = [.softBlobs, .lumpySausage]
+        let offTypes:     [PoopType] = [.lumpySausage, .fluffyPieces, .separateHardLumps]
+        let goodColors:   [PoopColor] = [.mediumBrown, .mediumBrown, .darkBrown, .lightBrown]
+        let okColors:     [PoopColor] = [.mediumBrown, .darkBrown, .lightBrown, .yellow]
 
-        let analyses = [
+        let goodAnalyses = [
             "Healthy stool — great hydration and fiber balance. Keep it up!",
-            "Well-formed and consistent. Your gut is in good shape today.",
-            "Slightly softer than ideal. Consider adding more fiber-rich foods.",
-            "Excellent form and color. Hydration levels look optimal.",
-            "Good consistency. Your digestive system is working well.",
-            "A bit firmer than usual — try drinking more water today.",
-            "Smooth and well-formed. Your diet is supporting healthy digestion.",
-            "Looser than average — could be diet-related. Monitor over next few days.",
-            "Great log! Fiber and hydration indicators are both strong.",
-            "Normal and healthy. Consistent with your recent trend."
+            "Textbook form. Your gut is dialed in.",
+            "Excellent color and consistency. Hydration looks optimal.",
+            "Smooth and well-formed. Diet is supporting strong digestion.",
+            "Great log — fiber and hydration both strong.",
+            "Consistent with your improving trend. Nice work."
+        ]
+        let okAnalyses = [
+            "Slightly softer than ideal. A bit more fiber would help.",
+            "A touch firmer than usual — try a glass more water today.",
+            "Decent log. A few small tweaks could push this into the green.",
+            "Normal range, but not your best. Monitor over the week."
         ]
 
+        struct DayPlan {
+            let logsToday: Int
+            let regularRate: Double
+            let hydration: ClosedRange<Double>
+            let fiber: ClosedRange<Double>
+            let useGoodColor: Bool
+        }
+
+        // Vary logs/day across the week so the frequency graph isn't flat.
+        func plan(daysAgo: Int) -> DayPlan {
+            switch daysAgo {
+            case 0...6:   // recent week — peak
+                let logs = [2, 1, 2, 1, 2, 1, 2][daysAgo]
+                return DayPlan(logsToday: logs,
+                               regularRate: 1.0,
+                               hydration: 0.78...0.90,
+                               fiber:     0.72...0.84,
+                               useGoodColor: true)
+            case 7...13:  // last week — strong
+                let logs = [2, 1, 2, 2, 1, 2, 1][daysAgo - 7]
+                return DayPlan(logsToday: logs,
+                               regularRate: 0.90,
+                               hydration: 0.66...0.80,
+                               fiber:     0.62...0.76,
+                               useGoodColor: true)
+            case 14...21: // week 3 — improving
+                let logs = [1, 2, 1, 1, 2, 1, 1, 2][daysAgo - 14]
+                return DayPlan(logsToday: logs,
+                               regularRate: 0.70,
+                               hydration: 0.55...0.68,
+                               fiber:     0.50...0.64,
+                               useGoodColor: false)
+            default:      // 22+ — oldest, rougher baseline
+                let logs = [1, 1, 0, 1, 1, 0, 1, 1][min(daysAgo - 22, 7)]
+                return DayPlan(logsToday: logs,
+                               regularRate: 0.50,
+                               hydration: 0.42...0.56,
+                               fiber:     0.40...0.55,
+                               useGoodColor: false)
+            }
+        }
+
         var results = [Log]()
-        let calendar = Calendar.current
 
-        for i in 0..<count {
-            let daysAgo = i  // One log per day going back
-            guard let date = calendar.date(byAdding: .day, value: -daysAgo, to: Date()) else { continue }
+        for daysAgo in 0..<count {
+            let p = plan(daysAgo: daysAgo)
+            guard p.logsToday > 0,
+                  let date = calendar.date(byAdding: .day, value: -daysAgo, to: now)
+            else { continue }
 
-            // Random time between 6am and 10am for realism
-            let hour = Int.random(in: 6...10)
-            let minute = Int.random(in: 0...59)
-            let logDate = calendar.date(bySettingHour: hour, minute: minute, second: 0, of: date)!
+            for logIndex in 0..<p.logsToday {
+                // Realistic times-of-day: morning first, then afternoon/evening.
+                let hour: Int
+                switch logIndex {
+                case 0: hour = Int.random(in: 7...10)    // morning
+                case 1: hour = Int.random(in: 14...18)   // afternoon/evening
+                default: hour = Int.random(in: 19...21)  // night
+                }
+                let minute = Int.random(in: 0...59)
+                guard let logDate = calendar.date(bySettingHour: hour,
+                                                  minute: minute,
+                                                  second: 0,
+                                                  of: date)
+                else { continue }
 
-            // Mostly healthy, some ok — keeps gauge barely green
-            let type: PoopType = Double.random(in: 0...1) < 0.65
-                ? healthyTypes.randomElement()!
-                : okTypes.randomElement()!
+                let isRegular = Double.random(in: 0...1) < p.regularRate
+                let type: PoopType = isRegular
+                    ? healthyTypes.randomElement()!
+                    : (Double.random(in: 0...1) < 0.6
+                        ? okTypes.randomElement()!
+                        : offTypes.randomElement()!)
 
-            let color = commonColors.randomElement()!
+                let color = p.useGoodColor
+                    ? goodColors.randomElement()!
+                    : okColors.randomElement()!
 
-            let dummy = Log(
-                poopScore: categorizePoopType(type),
-                type: type,
-                color: color,
-                size: [PoopSize.medium, .medium, .large].randomElement()!,
-                bloodPercentage: 0.0,
-                hydrationPercentage: Double.random(in: 0.55...0.75),
-                fiberPercentage: Double.random(in: 0.4...0.65),
-                timestamp: logDate,
-                analysis: analyses[i % analyses.count]
-            )
-            results.append(dummy)
+                let analysis = isRegular
+                    ? goodAnalyses.randomElement()!
+                    : okAnalyses.randomElement()!
+
+                let log = Log(
+                    poopScore: categorizePoopType(type),
+                    type: type,
+                    color: color,
+                    size: [PoopSize.medium, .medium, .large, .medium].randomElement()!,
+                    bloodPercentage: 0.0,
+                    hydrationPercentage: Double.random(in: p.hydration),
+                    fiberPercentage: Double.random(in: p.fiber),
+                    timestamp: logDate,
+                    analysis: analysis
+                )
+                results.append(log)
+            }
         }
 
         return results
