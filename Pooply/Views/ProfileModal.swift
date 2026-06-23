@@ -710,7 +710,11 @@ private struct SettingsMenuCard: View {
                     action: {
                         if let url = URL(string: "https://grossyb.github.io/pooply_privacy/") {
                             UIApplication.shared.open(url)
-                            Divider()
+                        }
+                    }
+                )
+
+                Divider()
                     .overlay(Theme.Colors.neutral50)
                     .padding(.leading, 56)
 
@@ -721,9 +725,6 @@ private struct SettingsMenuCard: View {
                     action: {
                         if let url = URL(string: "https://grossyb.github.io/pooply_privacy/references.html") {
                             UIApplication.shared.open(url)
-                        }
-                    }
-                )
                         }
                     }
                 )
