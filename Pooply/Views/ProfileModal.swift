@@ -710,6 +710,20 @@ private struct SettingsMenuCard: View {
                     action: {
                         if let url = URL(string: "https://grossyb.github.io/pooply_privacy/") {
                             UIApplication.shared.open(url)
+                            Divider()
+                    .overlay(Theme.Colors.neutral50)
+                    .padding(.leading, 56)
+
+                SettingsMenuItem(
+                    icon: "books.vertical.fill",
+                    title: "Medical Sources & References",
+                    subtitle: "Where our analysis comes from",
+                    action: {
+                        if let url = URL(string: "https://grossyb.github.io/pooply_privacy/references.html") {
+                            UIApplication.shared.open(url)
+                        }
+                    }
+                )
                         }
                     }
                 )
