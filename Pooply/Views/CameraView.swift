@@ -836,6 +836,33 @@ struct AnalysisResultsView: View {
                     .padding(.horizontal, Theme.Spacing.screenHorizontal)
                     .opacity(showSupporting ? 1 : 0)
                     .offset(y: showSupporting ? 0 : 30)
+                    // MARK: - Citation + disclaimer
+                    Button {
+                        if let url = URL(string: "https://grossyb.github.io/pooply_privacy/references.html") {
+                            UIApplication.shared.open(url)
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "info.circle")
+                                .font(.system(size: 11, weight: .semibold))
+                            Text("Based on the Bristol Stool Scale · Sources")
+                                .font(Theme.Fonts.caption())
+                                .underline()
+                        }
+                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.65))
+                    }
+                    .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                    .padding(.top, Theme.Spacing.xs)
+                    .opacity(showSupporting ? 1 : 0)
+
+                    Text("For wellness and educational use. Not medical advice.")
+                        .font(Theme.Fonts.caption())
+                        .foregroundStyle(Theme.Colors.textOnGlass.opacity(0.5))
+                        .multilineTextAlignment(.center)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal, Theme.Spacing.screenHorizontal)
+                        .padding(.top, 4)
+                        .opacity(showSupporting ? 1 : 0)
 
                     // MARK: - Metric Pills (glass)
                     HStack(spacing: Theme.Spacing.sm) {
