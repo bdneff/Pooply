@@ -142,13 +142,13 @@ No prose, no markdown, no explanations outside the JSON.`
 
       // Generate clinically accurate analysis
       const analysisMap = {
-        separateHardLumps: "Severe constipation. Stool transit time is too slow. Increase water intake significantly and add more dietary fiber.",
-        lumpySausage: "Mild constipation. Consider increasing daily water intake and fiber-rich foods like vegetables and whole grains.",
-        crackedSausage: "Healthy stool indicating good digestion and balanced hydration. Maintain current diet and hydration habits.",
-        smoothSausage: "Optimal stool quality. Excellent gut health, hydration, and fiber intake. Keep up your current habits.",
-        softBlobs: "Stool lacks adequate fiber for proper form. Increase fiber intake through vegetables, fruits, and whole grains.",
-        fluffyPieces: "Mild diarrhea indicating rapid transit. May suggest food sensitivity, stress, or mild infection. Monitor hydration closely.",
-        watery: "Diarrhea with risk of dehydration. Replenish fluids and electrolytes. If persistent beyond 48 hours, consult a physician."
+        separateHardLumps: "This looks consistent with Bristol Type 1 (hard, separate lumps), which is often associated with slower transit. Staying hydrated and adding dietary fiber may help. See Sources for references.",
+        lumpySausage: "This looks consistent with Bristol Type 2 (lumpy and firm). Drinking more water and eating fiber-rich foods like vegetables and whole grains may support softer, easier movements. See Sources.",
+        crackedSausage: "This looks consistent with Bristol Type 3, generally considered a healthy, well-formed stool. Your hydration and fiber appear balanced — nice work.",
+        smoothSausage: "This looks consistent with Bristol Type 4, often considered the ideal form. This typically reflects good hydration and fiber intake.",
+        softBlobs: "This looks consistent with Bristol Type 5 (soft blobs with clear edges). Adding more fiber from vegetables, fruits, and whole grains may help with form. See Sources.",
+        fluffyPieces: "This looks consistent with Bristol Type 6 (mushy, ragged edges), which can accompany faster transit. Keeping an eye on hydration may help. If this persists or you feel unwell, consider checking with a healthcare provider.",
+        watery: "This looks consistent with Bristol Type 7 (liquid). Faster transit can reduce fluid absorption, so replenishing fluids and electrolytes may help. If it continues beyond 48 hours, consider consulting a healthcare provider."
       };
 
       const result = {

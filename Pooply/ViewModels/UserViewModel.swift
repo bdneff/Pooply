@@ -618,8 +618,8 @@ class UserViewModel: ObservableObject {
             insights.append(Insight(
                 icon: "drop.fill",
                 iconColor: Color(hex: "#E53935"),
-                title: "Blood detected",
-                description: "Blood was logged \(logsWithBlood.count) time\(logsWithBlood.count == 1 ? "" : "s") \(timeframeLabel). Most recently: \(daysSinceLastBlood == 0 ? "today" : "\(daysSinceLastBlood) day\(daysSinceLastBlood == 1 ? "" : "s") ago")."
+                title: "Possible discoloration",
+                description: "Possible discoloration that can sometimes indicate blood was noted in \(logsWithBlood.count) log\(logsWithBlood.count == 1 ? "" : "s") \(timeframeLabel). Most recently: \(daysSinceLastBlood == 0 ? "today" : "\(daysSinceLastBlood) day\(daysSinceLastBlood == 1 ? "" : "s") ago"). This isn't a diagnosis — if you notice this, consider checking with a healthcare provider."
             ))
         }
 
@@ -713,9 +713,9 @@ class UserViewModel: ObservableObject {
 
         // Add blood warning if significant
         if bloodPercentage > 0.05 { // More than 5%
-            analysis += " Significant blood present (\(Int(bloodPercentage * 100))%) - consult a doctor if this persists."
+            analysis += " Possible discoloration was noted that can sometimes indicate blood (around \(Int(bloodPercentage * 100))%). This isn't a diagnosis — if you notice this, consider checking with a healthcare provider."
         } else if bloodPercentage > 0.0 {
-            analysis += " Minor traces of blood detected (\(Int(bloodPercentage * 100))%)."
+            analysis += " Slight discoloration was noted that can sometimes indicate blood (around \(Int(bloodPercentage * 100))%). This isn't a diagnosis, but it can be worth keeping an eye on."
         }
 
         return analysis
@@ -917,10 +917,10 @@ class UserViewModel: ObservableObject {
                 priority: pct > 10 ? .critical : .high,
                 icon: "exclamationmark.triangle.fill",
                 iconColor: Theme.Colors.blood,
-                title: "Blood Detected",
-                description: "Blood appeared in \(n) of your \(totalCount) log\(totalCount == 1 ? "" : "s") \(periodLabel). Even small traces are worth tracking — if you see it again, it's time to talk to a doctor.",
+                title: "Possible discoloration",
+                description: "Possible discoloration that can sometimes indicate blood appeared in \(n) of your \(totalCount) log\(totalCount == 1 ? "" : "s") \(periodLabel). This isn't a diagnosis, but it's worth tracking — if you notice it again, consider checking with a healthcare provider.",
                 metric: "\(n) log\(n == 1 ? "" : "s")",
-                actionable: "If recurring, consult a physician"
+                actionable: "If recurring, consider checking with a healthcare provider"
             ))
         }
 
@@ -1303,7 +1303,7 @@ class UserViewModel: ObservableObject {
         case .black:
             return ("Black", "Black stool can mean iron, dark foods, or upper-GI bleeding — pay attention.")
         case .red:
-            return ("Red", "Red can be beets or blood. If you didn't eat anything red, take it seriously.")
+            return ("Red", "Red can come from foods like beets, or sometimes blood. If you didn't eat anything red, it's worth keeping an eye on and checking with a healthcare provider.")
         case .lightBrown:
             return ("Light Brown", "Lighter stool can indicate low bile or a fast transit.")
         case .darkBrown:
